@@ -1,2 +1,10 @@
 checkpoints/
 data/
+venv/
+work_dirs/
+
+.idea/
+*/__pycache__/
+*/*/__pycache__/
+*/*/*/__pycache__/
+/__pycache__/
