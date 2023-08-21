@@ -3,11 +3,18 @@ import logging
 import os
 import requests
 import warnings
+import socket
 
 import numpy as np
 
 from mmcv.utils import get_logger
 from mmcv.runner import get_dist_info
+
+from mmcv.utils import collect_env as collect_basic_env
+from mmcv.utils import get_git_hash
+from mmcv.runner import DistEvalHook as BasicDistEvalHook
+
+__version__ = '0.1.0'
 
 
 def get_root_logger(log_file=None, log_level=logging.INFO):
@@ -264,3 +271,70 @@ def binary_precision_recall_curve(y_score, y_true):
     sl = slice(last_ind, None, -1)
 
     return np.r_[precision[sl], 1], np.r_[recall[sl], 0], thresholds[sl]
+
+
+
+
+
+
+
+
+def mc_on(port=22077, launcher='pytorch', size=60000, min_size=6):
+    # size is mb, allocate 24GB memory by default.
+    mc_exe = 'memcached' if launcher == 'pytorch' else '/mnt/lustre/share/memcached/bin/memcached'
+    os.system(f'{mc_exe} -p {port} -m {size}m -I {min_size}m -d')
+
+def mc_off():
+    os.system('killall memcached')
+
+
+def test_port(ip, port):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(2)
+    assert isinstance(ip, str)
+    if isinstance(port, str):
+        port = int(port)
+    assert 1 <= port <= 65535
+    result = sock.connect_ex((ip, port))
+    return result == 0
+
+
+def collect_env():
+    env_info = collect_basic_env()
+    env_info['pyskl'] = (
+        __version__ + '+' + get_git_hash(digits=7))
+    return env_info
+
+
+
+class DistEvalHook(BasicDistEvalHook):
+    greater_keys = [
+        'acc', 'top', 'AR@', 'auc', 'precision', 'mAP@', 'Recall@'
+    ]
+    less_keys = ['loss']
+
+    def __init__(self, *args, save_best='auto', seg_interval=None, **kwargs):
+        super().__init__(*args, save_best=save_best, **kwargs)
+        self.seg_interval = seg_interval
+        if seg_interval is not None:
+            assert isinstance(seg_interval, list)
+            for i, tup in enumerate(seg_interval):
+                assert isinstance(tup, tuple) and len(tup) == 3 and tup[0] < tup[1]
+                if i < len(seg_interval) - 1:
+                    assert tup[1] == seg_interval[i + 1][0]
+            assert self.by_epoch
+        assert self.start is None
+
+    def _find_n(self, runner):
+        current = runner.epoch
+        for seg in self.seg_interval:
+            if current >= seg[0] and current < seg[1]:
+                return seg[2]
+        return None
+
+    def _should_evaluate(self, runner):
+        if self.seg_interval is None:
+            return super()._should_evaluate(runner)
+        n = self._find_n(runner)
+        assert n is not None
+        return self.every_n_epochs(runner, n)
