@@ -14,6 +14,8 @@ from poseConv.dataset.builder import build_dataset, build_dataloader
 from poseConv.models.builder import build_model
 from poseConv.utils import cache_checkpoint
 
+from setuptools import find_packages
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -75,6 +77,7 @@ def inference_pytorch(args, cfg, data_loader):
 
 
 def main():
+
     args = parse_args()
 
     cfg = Config.fromfile(args.config)
