@@ -110,7 +110,10 @@ def main():
     data_loader = build_dataloader(dataset, **dataloader_setting)
 
     outputs = inference_pytorch(args, cfg, data_loader)
-    # print(outputs)
+    dataset.dump_results(outputs, out=out)
+    eval_res = dataset.evaluate(outputs, **eval_cfg)
+    for name, val in eval_res.items():
+        print(f'{name}: {val:.04f}')
 
 
 if __name__ == '__main__':

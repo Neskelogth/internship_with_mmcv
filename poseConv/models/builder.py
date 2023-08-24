@@ -32,7 +32,6 @@ def build_model(cfg):
     """Build model."""
     args = cfg.copy()
     obj_type = args.pop('type')
-    print('sas', RECOGNIZERS, BACKBONES)
     if obj_type in RECOGNIZERS:
         return build_recognizer(cfg)
     raise ValueError(f'{obj_type} is not registered')
