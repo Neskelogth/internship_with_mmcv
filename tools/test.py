@@ -107,7 +107,7 @@ def main():
     data_loader = build_dataloader(dataset, **dataloader_setting)
 
     outputs = inference_pytorch(args, cfg, data_loader)
-    print(outputs)
+    # print(outputs)
 
 
 if __name__ == '__main__':

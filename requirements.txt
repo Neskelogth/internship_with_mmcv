@@ -1,4 +1,4 @@
-mmcv-full~=1.5.0
+mmcv-full==1.5.0
 torch~=2.0.1
 numpy~=1.25.2
 requests~=2.31.0
