@@ -8,6 +8,42 @@ from ..utils import get_root_logger
 from .base import BaseDataset
 from .builder import DATASETS
 
+from tqdm import tqdm
+
+
+def adjust_missing_people(kps, scores, people, frames):
+
+    if len(list(set(people))) == 1:
+        return kps.reshape((frames, -1, 17, 2)), scores.reshape(frames, -1, 17)
+
+    # Different frames may have different numbers of people
+    max_people = max(people)
+    new_kps = np.array(list())
+    new_scores = np.array(list())
+    scores_idx = 0
+    idx = 0
+    for frame_people in people:
+        points_number = 17 * frame_people
+        kps_number = points_number * 2
+        partial_kps = kps[idx: idx + kps_number]
+        partial_scores = scores[scores_idx: scores_idx + points_number]
+        scores_idx += points_number
+        idx += kps_number
+        if max_people - frame_people > 0:
+            scores_to_add = np.array([0] * ((max_people - frame_people) * 17))
+            kps_to_add = np.array([0] * ((max_people - frame_people) * 17 * 2))
+
+            partial_scores = np.append(partial_scores, scores_to_add)
+            partial_kps = np.append(partial_kps, kps_to_add)
+
+        new_kps = np.append(new_kps, partial_kps)
+        new_scores = np.append(new_scores, partial_scores)
+
+    new_kps = new_kps.reshape((frames, max_people, 17, 2))
+    new_scores = new_scores.reshape((frames, max_people, 17))
+
+    return new_kps, new_scores
+
 
 def handle_person_kps(person):
 
@@ -139,10 +175,11 @@ class PoseDataset(BaseDataset):
         results = list()
 
         split_clips = open(os.path.join('../splits/', self.split + '.txt')).readlines()
+        split_clips = [item.replace('\n', '') for item in split_clips]
         folder_list = os.listdir(self.ann)
         folder_list = [item.replace('_rgb', '') for item in folder_list]
         folder_list = [file for file in folder_list if file in split_clips]
-        for folder in folder_list:
+        for folder in tqdm(folder_list):
             result = dict()
             folder_path = os.path.join(self.ann, folder + '_rgb')
             frame_list = os.listdir(folder_path)
@@ -154,6 +191,8 @@ class PoseDataset(BaseDataset):
             result['label'] = int(folder[-3:]) - 1
             result['keypoint'] = np.array(list())
             result['keypoint_score'] = np.array(list())
+            # print(len(frame_list))
+            people = list()
             for frame in frame_list:
                 frame_path = os.path.join(folder_path, frame)
                 body_25_skeletons = json.load(open(frame_path, 'r'))['people']
@@ -165,11 +204,19 @@ class PoseDataset(BaseDataset):
                 # (25 keypoints, x, y and confidence for each one of them)
                 kps = np.array(kps).reshape((-1, 25, 3))
                 kps, confidences = body_25_to_coco(kps)
+                # print(kps.shape, confidences.shape, len(result['keypoint']))
+                people.append(kps.shape[0])
                 result['keypoint'] = np.append(result['keypoint'], kps)
                 result['keypoint_score'] = np.append(result['keypoint_score'], confidences)
 
-            result['keypoint_score'] = np.transpose(result['keypoint_score'].reshape((len(frame_list), -1, 17)), (1, 0, 2))
-            result['keypoint'] = np.transpose(result['keypoint'].reshape((len(frame_list), -1, 17, 2)), (1, 0, 2, 3))
+            result['keypoint'], result['keypoint_score'] = adjust_missing_people(result['keypoint'],
+                                                                                 result['keypoint_score'],
+                                                                                 people, len(frame_list))
+
+            result['keypoint'] = result['keypoint'].reshape(len(frame_list), -1, 17, 2)
+            result['keypoint_score'] = result['keypoint'].reshape(len(frame_list), -1, 17)
+            result['keypoint_score'] = np.transpose(result['keypoint_score'], (1, 0, 2))
+            result['keypoint'] = np.transpose(result['keypoint'], (1, 0, 2, 3))
             results.append(result)
 
         return results
