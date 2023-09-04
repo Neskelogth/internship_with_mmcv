@@ -175,10 +175,11 @@ class PoseDataset(BaseDataset):
         results = list()
 
         split_clips = open(os.path.join('../splits/', self.split + '.txt')).readlines()
-        split_clips = [item.replace('\n', '') for item in split_clips]
+        split_clips = [item.strip() for item in split_clips]
         folder_list = os.listdir(self.ann)
         folder_list = [item.replace('_rgb', '') for item in folder_list]
         folder_list = [file for file in folder_list if file in split_clips]
+        # folder_list = [file for file in folder_list if file == 'S004C002P020R001A052']
         for folder in tqdm(folder_list):
             result = dict()
             folder_path = os.path.join(self.ann, folder + '_rgb')
@@ -191,7 +192,6 @@ class PoseDataset(BaseDataset):
             result['label'] = int(folder[-3:]) - 1
             result['keypoint'] = np.array(list())
             result['keypoint_score'] = np.array(list())
-            # print(len(frame_list))
             people = list()
             for frame in frame_list:
                 frame_path = os.path.join(folder_path, frame)
@@ -217,6 +217,6 @@ class PoseDataset(BaseDataset):
             result['keypoint_score'] = result['keypoint'].reshape(len(frame_list), -1, 17)
             result['keypoint_score'] = np.transpose(result['keypoint_score'], (1, 0, 2))
             result['keypoint'] = np.transpose(result['keypoint'], (1, 0, 2, 3))
-            results.append(result)
+            # print(result['keypoint'].shape)
 
         return results

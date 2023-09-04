@@ -24,7 +24,7 @@ train_pipeline = [
     dict(type='RandomResizedCrop', area_range=(0.56, 1.0)),
     dict(type='Resize', scale=(56, 56), keep_ratio=False),
     dict(type='Flip', flip_ratio=0.5, left_kp=left_kp, right_kp=right_kp),
-    dict(type='GeneratePoseTarget', with_kp=True, with_limb=False),
+    dict(type='GeneratePoseTarget', with_kp=True, with_limb=False, eps=0.5),
     dict(type='FormatShape', input_format='NCTHW_Heatmap'),
     dict(type='Collect', keys=['imgs', 'label'], meta_keys=[]),
     dict(type='ToTensor', keys=['imgs', 'label'])
@@ -34,7 +34,7 @@ val_pipeline = [
     dict(type='PoseDecode'),
     dict(type='PoseCompact', hw_ratio=1., allow_imgpad=True),
     dict(type='Resize', scale=(64, 64), keep_ratio=False),
-    dict(type='GeneratePoseTarget', with_kp=True, with_limb=False),
+    dict(type='GeneratePoseTarget', with_kp=True, with_limb=False, eps=0.5),
     dict(type='FormatShape', input_format='NCTHW_Heatmap'),
     dict(type='Collect', keys=['imgs', 'label'], meta_keys=[]),
     dict(type='ToTensor', keys=['imgs'])
@@ -44,7 +44,7 @@ test_pipeline = [
     dict(type='PoseDecode'),
     dict(type='PoseCompact', hw_ratio=1., allow_imgpad=True),
     dict(type='Resize', scale=(64, 64), keep_ratio=False),
-    dict(type='GeneratePoseTarget', double=True, left_kp=left_kp, right_kp=right_kp),
+    dict(type='GeneratePoseTarget', double=True, left_kp=left_kp, right_kp=right_kp, eps=0.5),
     dict(type='FormatShape', input_format='NCTHW_Heatmap'),
     dict(type='Collect', keys=['imgs', 'label'], meta_keys=[]),
     dict(type='ToTensor', keys=['imgs'])

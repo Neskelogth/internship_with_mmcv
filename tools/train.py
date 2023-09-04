@@ -51,6 +51,11 @@ def parse_args():
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
 
+    os.environ['RANK'] = '-1'
+    os.environ['WORLD_SIZE'] = '1'
+    os.environ['MASTER_ADDR'] = '0.0.0.0'
+    os.environ['MASTER_PORT'] = '30080'
+
     return args
 
 

@@ -3,8 +3,6 @@ import numpy as np
 
 from ..dataset.builder import PIPELINES
 
-EPS = 1e-3
-
 
 @PIPELINES.register_module()
 class GeneratePoseTarget:
@@ -34,7 +32,8 @@ class GeneratePoseTarget:
                  double=False,
                  left_kp=(1, 3, 5, 7, 9, 11, 13, 15),
                  right_kp=(2, 4, 6, 8, 10, 12, 14, 16),
-                 scaling=1.):
+                 scaling=1.,
+                 eps=1e-3):
 
         self.sigma = sigma
         self.use_score = use_score
@@ -43,6 +42,7 @@ class GeneratePoseTarget:
         self.left_kp = left_kp
         self.right_kp = right_kp
         self.scaling = scaling
+        self.eps = eps
 
     def generate_a_heatmap(self, arr, centers, max_values):
         """Generate pseudo heatmap for one keypoint in one frame.
@@ -60,7 +60,7 @@ class GeneratePoseTarget:
         img_h, img_w = arr.shape
 
         for center, max_value in zip(centers, max_values):
-            if max_value < EPS:
+            if max_value < self.eps:
                 continue
 
             mu_x, mu_y = center[0], center[1]

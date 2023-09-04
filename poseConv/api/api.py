@@ -126,6 +126,7 @@ def train_model(model,
         cfg.load_from = cache_checkpoint(cfg.load_from)
         runner.load_checkpoint(cfg.load_from)
 
+    exit(42)
     runner.run(data_loaders, cfg.workflow, cfg.total_epochs)
 
     dist.barrier()
