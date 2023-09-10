@@ -171,7 +171,8 @@ def mean_class_accuracy(scores, labels):
     """
     pred = np.argmax(scores, axis=1)
     cf_mat = confusion_matrix(pred, labels).astype(float)
-
+    print(cf_mat)
+    exit(42)
     cls_cnt = cf_mat.sum(axis=1)
     cls_hit = np.diag(cf_mat)
 

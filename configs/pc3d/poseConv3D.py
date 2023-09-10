@@ -51,8 +51,8 @@ test_pipeline = [  # 16487 elements for xsub, 18932 for xview
     dict(type='ToTensor', keys=['imgs'])
 ]
 data = dict(
-    videos_per_gpu=4,  # batch size
-    workers_per_gpu=8,  # num workers
+    videos_per_gpu=1,  # batch size
+    workers_per_gpu=1,  # num workers
     test_dataloader=dict(videos_per_gpu=4, workers_per_gpu=8),
     train=dict(
         type='RepeatDataset',

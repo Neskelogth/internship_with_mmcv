@@ -179,6 +179,7 @@ class PoseDataset(BaseDataset):
         folder_list = os.listdir(self.ann)
         folder_list = [item.replace('_rgb', '') for item in folder_list]
         folder_list = [file for file in folder_list if file in split_clips]
+        folder_list = folder_list[:4000]
         # folder_list = [file for file in folder_list if file == 'S004C002P020R001A052']
         for folder in tqdm(folder_list):
             result = dict()
