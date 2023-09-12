@@ -10,7 +10,7 @@ PIPELINES = Registry('pipeline')
 
 
 def build_dataset(cfg, default_args=None):
-    # print(cfg)
+    print(cfg)
     dataset = build_from_cfg(cfg, DATASETS, default_args)
     return dataset
 

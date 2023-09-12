@@ -4,3 +4,4 @@ numpy
 requests
 scipy~=1.11.1
 torchvision~=0.15.2
+decord ~= 0.6.0
