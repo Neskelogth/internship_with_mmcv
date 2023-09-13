@@ -78,6 +78,7 @@ def inference_pytorch(args, cfg, data_loader):
 
 def main():
 
+    torch.multiprocessing.set_start_method('spawn')
     args = parse_args()
 
     cfg = Config.fromfile(args.config)

@@ -2,9 +2,10 @@ model = dict(
     type='Recognizer3D',
     backbone=dict(
         type='C3D',
-        in_channels=17,
+        in_channels=17,  ###############################################################################################
         base_channels=32,
         num_stages=3,
+        # num_stages=4
         temporal_downsample=False),
     cls_head=dict(
         type='I3DHead',
@@ -12,8 +13,6 @@ model = dict(
         num_classes=60,
         dropout=0.5),
     test_cfg=dict(average_clips='prob'))
-
-img_norm_cfg = dict(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_bgr=False)
 
 dataset_type = 'PoseDataset'
 ann_file = '../data/nturgbd/ntu60_hrnet.pkl'
@@ -55,7 +54,7 @@ test_pipeline = [  # 16487 elements for xsub, 18932 for xview
 data = dict(
     videos_per_gpu=1,  # batch size
     workers_per_gpu=1,  # num workers
-    test_dataloader=dict(videos_per_gpu=1, workers_per_gpu=1),
+    test_dataloader=dict(videos_per_gpu=4, workers_per_gpu=8),
     train=dict(
         type='RepeatDataset',
         times=10,
@@ -63,7 +62,7 @@ data = dict(
     val=dict(type=dataset_type, ann_file=ann_file, split='xsub_val', pipeline=val_pipeline),
     test=dict(type=dataset_type, ann_file=ann_file, split='xsub_val', pipeline=test_pipeline))
 # optimizer
-optimizer = dict(type='Adam', lr=0.001)
+optimizer = dict(type='SGD', lr=0.4, momentum=0.9, weight_decay=0.0003)  # this lr is used for 8 gpus
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
 lr_config = dict(policy='CosineAnnealing', by_epoch=False, min_lr=0)

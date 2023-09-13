@@ -4,6 +4,7 @@ model = dict(
         type='C3D',
         in_channels=17,
         base_channels=32,
+        num_stages=3,
         temporal_downsample=False),
     cls_head=dict(
         type='I3DHead',

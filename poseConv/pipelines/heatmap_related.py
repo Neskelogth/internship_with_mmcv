@@ -2,7 +2,10 @@
 import numpy as np
 
 from ..dataset.builder import PIPELINES
+import torch
 
+
+DEVICE = 'cuda:0'
 
 @PIPELINES.register_module()
 class GeneratePoseTarget:
@@ -61,7 +64,7 @@ class GeneratePoseTarget:
         self.with_limb = with_limb
         self.double = double
 
-        assert self.with_kp + self.with_limb == 1, ('One of "with_limb" and "with_kp" should be set as True.')
+        assert self.with_kp + self.with_limb == 1, 'One of "with_limb" and "with_kp" should be set as True.'
         self.left_kp = left_kp
         self.right_kp = right_kp
         self.skeletons = skeletons
@@ -94,17 +97,17 @@ class GeneratePoseTarget:
             ed_x = min(int(mu_x + 3 * sigma) + 1, img_w)
             st_y = max(int(mu_y - 3 * sigma), 0)
             ed_y = min(int(mu_y + 3 * sigma) + 1, img_h)
-            x = np.arange(st_x, ed_x, 1, np.float32)
-            y = np.arange(st_y, ed_y, 1, np.float32)
+            x = torch.arange(st_x, ed_x, 1, device=DEVICE, dtype=torch.float32)
+            y = torch.arange(st_y, ed_y, 1, device=DEVICE, dtype=torch.float32)
 
             # if the keypoint not in the heatmap coordinate system
             if not (len(x) and len(y)):
                 continue
             y = y[:, None]
 
-            patch = np.exp(-((x - mu_x)**2 + (y - mu_y)**2) / 2 / sigma**2)
+            patch = torch.exp(-((x - mu_x)**2 + (y - mu_y)**2) / 2 / sigma**2)
             patch = patch * max_value
-            arr[st_y:ed_y, st_x:ed_x] = np.maximum(arr[st_y:ed_y, st_x:ed_x], patch)
+            arr[st_y:ed_y, st_x:ed_x] = torch.maximum(arr[st_y:ed_y, st_x:ed_x], patch)
 
     def generate_a_limb_heatmap(self, arr, starts, ends, start_values, end_values):
         """Generate pseudo heatmap for one limb in one frame.
@@ -136,15 +139,15 @@ class GeneratePoseTarget:
             min_y = max(int(min_y - 3 * sigma), 0)
             max_y = min(int(max_y + 3 * sigma) + 1, img_h)
 
-            x = np.arange(min_x, max_x, 1, np.float32)
-            y = np.arange(min_y, max_y, 1, np.float32)
+            x = torch.arange(min_x, max_x, 1, dtype=torch.float32, device=DEVICE)
+            y = torch.arange(min_y, max_y, 1, dtype=torch.float32, device=DEVICE)
 
             if not (len(x) and len(y)):
                 continue
 
             y = y[:, None]
-            x_0 = np.zeros_like(x)
-            y_0 = np.zeros_like(y)
+            x_0 = torch.zeros_like(x, device=DEVICE)
+            y_0 = torch.zeros_like(y, device=DEVICE)
 
             # distance to start keypoints
             d2_start = ((x - start[0])**2 + (y - start[1])**2)
@@ -165,16 +168,16 @@ class GeneratePoseTarget:
             b_dominate = coeff >= 1
             seg_dominate = 1 - a_dominate - b_dominate
 
-            position = np.stack([x + y_0, y + x_0], axis=-1)
-            projection = start + np.stack([coeff, coeff], axis=-1) * (end - start)
+            position = torch.stack([x + y_0, y + x_0], dim=-1)
+            projection = start + torch.stack([coeff, coeff], dim=-1) * (end - start)
             d2_line = position - projection
             d2_line = d2_line[:, :, 0]**2 + d2_line[:, :, 1]**2
             d2_seg = a_dominate * d2_start + b_dominate * d2_end + seg_dominate * d2_line
 
-            patch = np.exp(-d2_seg / 2. / sigma**2)
+            patch = torch.exp(-d2_seg / 2. / sigma**2)
             patch = patch * value_coeff
 
-            arr[min_y:max_y, min_x:max_x] = np.maximum(arr[min_y:max_y, min_x:max_x], patch)
+            arr[min_y:max_y, min_x:max_x] = torch.maximum(arr[min_y:max_y, min_x:max_x], patch)
 
     def generate_heatmap(self, arr, kps, max_values):
         """Generate pseudo heatmap for all keypoints and limbs in one frame (if
@@ -215,12 +218,14 @@ class GeneratePoseTarget:
         """
 
         all_kps = results['keypoint']
+        # all_kps = torch.from_numpy(all_kps)
         kp_shape = all_kps.shape
 
         if 'keypoint_score' in results:
             all_kpscores = results['keypoint_score']
+            # all_kpscores = torch.from_numpy(all_kpscores)
         else:
-            all_kpscores = np.ones(kp_shape[:-1], dtype=np.float32)
+            all_kpscores = torch.ones(kp_shape[:-1], dtype=torch.float32, device=DEVICE)
 
         img_h, img_w = results['img_shape']
 
@@ -235,16 +240,16 @@ class GeneratePoseTarget:
             num_c += all_kps.shape[2]
         if self.with_limb:
             num_c += len(self.skeletons)
-        ret = np.zeros([num_frame, num_c, img_h, img_w], dtype=np.float32)
+        ret = torch.zeros([num_frame, num_c, img_h, img_w], dtype=torch.float32, device=DEVICE)
 
         for i in range(num_frame):
             # M, V, C
             kps = all_kps[:, i]
             # M, C
-            kpscores = all_kpscores[:, i] if self.use_score else np.ones_like(all_kpscores[:, i])
+            kpscores = all_kpscores[:, i] if self.use_score else torch.ones_like(all_kpscores[:, i], device=DEVICE)
 
             self.generate_heatmap(ret[i], kps, kpscores)
-        return ret
+        return ret.cpu().numpy()
 
     def __call__(self, results):
         heatmap = self.gen_an_aug(results)

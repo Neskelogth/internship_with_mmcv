@@ -72,6 +72,10 @@ class MMUniformSampleFrames(UniformSampleFrames):
         if not isinstance(results['modality'], list):
             # should override
             results['modality'] = modalities
+
+        print(results)
+        exit(42)
+
         return results
 
 

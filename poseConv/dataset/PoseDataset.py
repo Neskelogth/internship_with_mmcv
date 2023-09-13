@@ -164,6 +164,7 @@ class PoseDataset(BaseDataset):
             identifier = 'frame_dir'
             split = set(split[self.split])
             data = [x for x in data if x[identifier] in split]
+            data = data[:10]
 
         for item in data:
             item['frame_dir'] = os.path.join(self.data_prefix, item['frame_dir'])

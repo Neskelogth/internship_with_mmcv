@@ -82,3 +82,6 @@ class Recognizer3D(BaseRecognizer):
         cls_score = cls_score.reshape(batches, num_segs, cls_score.shape[-1])
         cls_score = self.average_clip(cls_score)
         return cls_score.cpu().numpy()
+
+
+

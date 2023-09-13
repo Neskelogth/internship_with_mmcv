@@ -18,7 +18,7 @@ class C3D(nn.Module):
     def __init__(self,
                  in_channels=3,
                  base_channels=64,
-                 # num_stages=4,
+                 num_stages=3,
                  temporal_downsample=True,
                  pretrained=None):
         super().__init__()
@@ -28,8 +28,8 @@ class C3D(nn.Module):
         self.pretrained = pretrained
         self.in_channels = in_channels
         self.base_channels = base_channels
-        # assert num_stages in [3, 4]
-        # self.num_stages = num_stages
+        assert num_stages in [3, 4]
+        self.num_stages = num_stages
         self.temporal_downsample = temporal_downsample
         pool_kernel, pool_stride = 2, 2
         if not self.temporal_downsample:
@@ -50,10 +50,10 @@ class C3D(nn.Module):
         self.conv4a = ConvModule(self.base_channels * 4, self.base_channels * 8, **c3d_conv_param)
         self.conv4b = ConvModule(self.base_channels * 8, self.base_channels * 8, **c3d_conv_param)
 
-        # if self.num_stages == 4:
-        #     self.pool4 = nn.AvgPool3d(kernel_size=pool_kernel, stride=pool_stride)
-        #     self.conv5a = ConvModule(self.base_channels * 8, self.base_channels * 8, **c3d_conv_param)
-        #     self.conv5b = ConvModule(self.base_channels * 8, self.base_channels * 8, **c3d_conv_param)
+        if self.num_stages == 4:
+            self.pool4 = nn.AvgPool3d(kernel_size=pool_kernel, stride=pool_stride)
+            self.conv5a = ConvModule(self.base_channels * 8, self.base_channels * 8, **c3d_conv_param)
+            self.conv5b = ConvModule(self.base_channels * 8, self.base_channels * 8, **c3d_conv_param)
 
     def init_weights(self):
         """Initiate the parameters either from existing checkpoint or from
@@ -90,11 +90,11 @@ class C3D(nn.Module):
         x = self.conv4a(x)
         x = self.conv4b(x)
 
-        # if self.num_stages == 3:
-        #     return x
-        #
-        # x = self.pool4(x)
-        # x = self.conv5a(x)
-        # x = self.conv5b(x)
+        if self.num_stages == 3:
+            return x
+
+        x = self.pool4(x)
+        x = self.conv5a(x)
+        x = self.conv5b(x)
 
         return x
