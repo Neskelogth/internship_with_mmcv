@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 from torch.nn.modules.utils import _pair
 
 from ..dataset.builder import PIPELINES
@@ -72,9 +73,6 @@ class MMUniformSampleFrames(UniformSampleFrames):
         if not isinstance(results['modality'], list):
             # should override
             results['modality'] = modalities
-
-        print(results)
-        exit(42)
 
         return results
 
@@ -150,10 +148,10 @@ class MMCompact:
         kp_x = keypoint[..., 0]
         kp_y = keypoint[..., 1]
 
-        min_x = np.min(kp_x[kp_x != 0], initial=np.Inf)
-        min_y = np.min(kp_y[kp_y != 0], initial=np.Inf)
-        max_x = np.max(kp_x[kp_x != 0], initial=-np.Inf)
-        max_y = np.max(kp_y[kp_y != 0], initial=-np.Inf)
+        min_x = torch.min(kp_x[kp_x != 0])
+        min_y = torch.min(kp_y[kp_y != 0])
+        max_x = torch.max(kp_x[kp_x != 0])
+        max_y = torch.max(kp_y[kp_y != 0])
 
         # The compact area is too small
         if max_x - min_x < self.threshold or max_y - min_y < self.threshold:
@@ -210,7 +208,7 @@ class MMCompact:
         h, w = img_shape
         kp = results['keypoint']
         # Make NaN zero
-        kp[np.isnan(kp)] = 0.
+        kp[torch.isnan(kp)] = 0.
         min_x, min_y, max_x, max_y = self._get_box(kp, img_shape)
 
         kp_x, kp_y = kp[..., 0], kp[..., 1]

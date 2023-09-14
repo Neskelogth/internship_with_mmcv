@@ -456,7 +456,7 @@ class Resize:
         if 'imgs' in results:
             results['imgs'] = self._resize_imgs(results['imgs'], new_w, new_h)
         if 'keypoint' in results:
-            results['keypoint'] = self._resize_kps(results['keypoint'], self.scale_factor)
+            results['keypoint'] = self._resize_kps(results['keypoint'].to('cuda:0'), self.scale_factor)
 
         if 'gt_bboxes' in results:
             results['gt_bboxes'] = self._box_resize(results['gt_bboxes'], self.scale_factor)

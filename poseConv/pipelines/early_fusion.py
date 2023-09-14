@@ -1,21 +1,29 @@
 from ..dataset.builder import PIPELINES
 import torch
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 @PIPELINES.register_module()
 class StackFrames:
-    def __init__(self, all_frames=True):
-        self.all_frames = all_frames
 
-    def __call__(self, rgb_frames, pose_frames):
+    def __call__(self, results):
 
-        assert rgb_frames.shape == pose_frames.shape, ('The frames in rgb modality and pose '
-                                                       'modality must have the same shape')
+        # print(results.keys())
 
-        if self.all_frames:
-            return torch.stack((rgb_frames, pose_frames))
+        # from frames x w x h x channels to frames x channels x w x h
+        new_imgs = np.transpose(results['imgs'], axes=(0, 3, 1, 2))
 
+        total_channels = results['heatmap_imgs'].shape[1] + new_imgs.shape[1]
+        final_imgs = np.empty((new_imgs.shape[0], total_channels, new_imgs.shape[2], new_imgs.shape[3]))
 
+        for i in range(new_imgs.shape[0]):
+            final_imgs[i, :results['heatmap_imgs'].shape[1], :, :] = results['heatmap_imgs'][i]
+            final_imgs[i, -new_imgs.shape[1]:, :, :] = new_imgs[i]
+
+        results['imgs'] = final_imgs
+
+        return results
 
     def __repr__(self):
-        return f'{self.__class__.__name__} (one by one: {self.all_frames})'
+        return f'{self.__class__.__name__}'

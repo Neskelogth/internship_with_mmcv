@@ -14,6 +14,7 @@ from poseConv.dataset.builder import build_dataset, build_dataloader
 from poseConv.models.builder import build_model
 from poseConv.utils import cache_checkpoint
 
+from torchsummary import summary
 # from setuptools import find_packages
 
 

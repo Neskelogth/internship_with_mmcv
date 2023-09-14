@@ -13,8 +13,6 @@ model = dict(
         dropout=0.5),
     test_cfg=dict(average_clips='prob'))
 
-img_norm_cfg = dict(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_bgr=False)
-
 dataset_type = 'PoseDataset'
 ann_file = '../data/nturgbd/ntu60_hrnet.pkl'
 left_kp = [1, 3, 5, 7, 9, 11, 13, 15]

@@ -41,7 +41,7 @@ model = dict(
     test_cfg=test_cfg)
 
 dataset_type = 'PoseDataset'
-data_root = 'data/nturgbd_videos/'
+data_root = '../data/nturgbd_videos/'
 ann_file = '../data/nturgbd/ntu60_hrnet.pkl'
 left_kp = [1, 3, 5, 7, 9, 11, 13, 15]
 right_kp = [2, 4, 6, 8, 10, 12, 14, 16]

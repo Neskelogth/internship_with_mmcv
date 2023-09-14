@@ -218,12 +218,10 @@ class GeneratePoseTarget:
         """
 
         all_kps = results['keypoint']
-        # all_kps = torch.from_numpy(all_kps)
         kp_shape = all_kps.shape
 
         if 'keypoint_score' in results:
             all_kpscores = results['keypoint_score']
-            # all_kpscores = torch.from_numpy(all_kpscores)
         else:
             all_kpscores = torch.ones(kp_shape[:-1], dtype=torch.float32, device=DEVICE)
 

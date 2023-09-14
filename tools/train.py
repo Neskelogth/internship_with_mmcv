@@ -51,7 +51,7 @@ def parse_args():
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
 
-    os.environ['RANK'] = '-1'
+    os.environ['RANK'] = '1'
     os.environ['WORLD_SIZE'] = '1'
     os.environ['MASTER_ADDR'] = '0.0.0.0'
     os.environ['MASTER_PORT'] = '30080'
@@ -60,9 +60,12 @@ def parse_args():
 
 
 def main():
-    args = parse_args()
 
+    args = parse_args()
     cfg = Config.fromfile(args.config)
+    save_checkpoint_path = '../checkpoints/'
+
+    torch.multiprocessing.set_start_method('spawn')
 
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
@@ -77,6 +80,9 @@ def main():
     if not hasattr(cfg, 'dist_params'):
         cfg.dist_params = dict(backend='nccl')
 
+    torch.cuda.set_device(int(os.environ['RANK']) % torch.cuda.device_count())
+    torch.distributed.init_process_group(**cfg.dist_params)
+    print(cfg.dist_params)
     init_dist(args.launcher, **cfg.dist_params)
     rank, world_size = get_dist_info()
     cfg.gpu_ids = range(world_size)
@@ -96,6 +102,7 @@ def main():
     log_file = os.path.join(cfg.work_dir, f'{timestamp}.log')
     logger = get_root_logger(log_file=log_file, log_level=cfg.get('log_level', 'INFO'))
 
+    print('logger done')
     # init the meta dict to record some important information such as
     # environment info and seed, which will be logged
     meta = dict()
@@ -153,14 +160,17 @@ def main():
             retry -= 1
         assert retry >= 0, 'Failed to launch memcached. '
 
+    print('bonobo')
     dist.barrier()
 
+    print('banana')
     train_model(model, datasets, cfg, validate=args.validate, test=test_option, timestamp=timestamp, meta=meta)
     dist.barrier()
 
     if rank == 0 and memcached:
         mc_off()
 
+    torch.save(model.state_dict(), save_checkpoint_path)
 
 if __name__ == '__main__':
     main()
