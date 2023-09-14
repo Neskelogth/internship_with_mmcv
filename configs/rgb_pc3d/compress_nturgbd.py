@@ -2,7 +2,13 @@ import multiprocessing as mp
 import os
 import subprocess
 
-from pyskl.smp import *
+
+def ls(dirname='.', full=True, match=''):
+    if not full or dirname == '.':
+        ans = os.listdir(dirname)
+    ans = [os.path.join(dirname, x) for x in os.listdir(dirname)]
+    ans = [x for x in ans if match in x]
+    return ans
 
 
 def get_shape(vid):
@@ -28,6 +34,7 @@ def compress_nturgbd(name):
     dest = src.replace('nturgbd_raw', 'nturgbd_videos').replace('_rgb.avi', '.mp4')
     shape = (1920, 1080)
     compress(src, dest, shape)
+
 
 os.makedirs('../../data/nturgbd_videos', exist_ok=True)
 files = ls('../../data/nturgbd_raw', match='.avi')

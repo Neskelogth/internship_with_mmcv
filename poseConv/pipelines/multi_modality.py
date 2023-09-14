@@ -93,7 +93,7 @@ class MMDecode(DecordInit, DecordDecode, PoseDecode):
             frame_inds = results[f'{mod}_inds']
             if mod == 'RGB':
                 if 'filename' not in results:
-                    results['filename'] = results['frame_dir'] + '.mp4'
+                    results['filename'] = results['frame_dir'] + '_rgb.avi'
                 video_reader = self._get_videoreader(results['filename'])
                 imgs = self._decord_load_frames(video_reader, frame_inds)
                 del video_reader

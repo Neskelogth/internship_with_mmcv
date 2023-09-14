@@ -56,7 +56,7 @@ class GeneratePoseTarget:
                  left_limb=(0, 2, 4, 5, 6, 10, 11, 12),
                  right_limb=(1, 3, 7, 8, 9, 13, 14, 15),
                  scaling=1.,
-                 eps = 1e-3):
+                 eps=1e-3):
 
         self.sigma = sigma
         self.use_score = use_score
@@ -106,7 +106,8 @@ class GeneratePoseTarget:
             y = y[:, None]
 
             patch = torch.exp(-((x - mu_x)**2 + (y - mu_y)**2) / 2 / sigma**2)
-            patch = patch * max_value
+            if self.use_score:
+                patch = patch * max_value
             arr[st_y:ed_y, st_x:ed_x] = torch.maximum(arr[st_y:ed_y, st_x:ed_x], patch)
 
     def generate_a_limb_heatmap(self, arr, starts, ends, start_values, end_values):
@@ -175,7 +176,8 @@ class GeneratePoseTarget:
             d2_seg = a_dominate * d2_start + b_dominate * d2_end + seg_dominate * d2_line
 
             patch = torch.exp(-d2_seg / 2. / sigma**2)
-            patch = patch * value_coeff
+            if self.use_score:
+                patch = patch * value_coeff
 
             arr[min_y:max_y, min_x:max_x] = torch.maximum(arr[min_y:max_y, min_x:max_x], patch)
 
