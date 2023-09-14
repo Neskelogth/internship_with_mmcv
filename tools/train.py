@@ -102,7 +102,6 @@ def main():
     log_file = os.path.join(cfg.work_dir, f'{timestamp}.log')
     logger = get_root_logger(log_file=log_file, log_level=cfg.get('log_level', 'INFO'))
 
-    print('logger done')
     # init the meta dict to record some important information such as
     # environment info and seed, which will be logged
     meta = dict()
@@ -160,17 +159,15 @@ def main():
             retry -= 1
         assert retry >= 0, 'Failed to launch memcached. '
 
-    print('bonobo')
     dist.barrier()
-
-    print('banana')
     train_model(model, datasets, cfg, validate=args.validate, test=test_option, timestamp=timestamp, meta=meta)
     dist.barrier()
 
     if rank == 0 and memcached:
         mc_off()
 
-    torch.save(model.state_dict(), save_checkpoint_path)
+    torch.save(model.state_dict(), save_checkpoint_path + args.config.split('/')[-1][:-3] + '.pth')
+
 
 if __name__ == '__main__':
     main()

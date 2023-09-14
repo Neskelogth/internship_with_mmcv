@@ -21,7 +21,10 @@ class StackFrames:
             final_imgs[i, :results['heatmap_imgs'].shape[1], :, :] = results['heatmap_imgs'][i]
             final_imgs[i, -new_imgs.shape[1]:, :, :] = new_imgs[i]
 
+        final_imgs = np.transpose(final_imgs, axes=(1, 0, 2, 3))
+
         results['imgs'] = final_imgs
+
 
         return results
 
