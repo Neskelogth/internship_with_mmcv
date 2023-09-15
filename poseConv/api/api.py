@@ -4,7 +4,7 @@ import os.path as osp
 import time
 import torch
 import torch.distributed as dist
-from mmcv.engine import multi_gpu_test
+from mmcv.engine import single_gpu_test
 from mmcv.parallel import MMDistributedDataParallel
 from mmcv.runner import DistSamplerSeedHook, EpochBasedRunner, OptimizerHook, build_optimizer, get_dist_info
 
@@ -62,8 +62,8 @@ def train_model(model,
     dataloader_setting = dict(
         videos_per_gpu=cfg.data.get('videos_per_gpu', 1),
         workers_per_gpu=cfg.data.get('workers_per_gpu', 1),
-        persistent_workers=cfg.data.get('persistent_workers', False),
-        seed=cfg.seed)
+        persistent_workers=cfg.data.get('persistent_workers', False))
+
     dataloader_setting = dict(dataloader_setting,
                               **cfg.data.get('train_dataloader', {}))
 
@@ -71,16 +71,7 @@ def train_model(model,
         build_dataloader(ds, **dataloader_setting) for ds in dataset
     ]
 
-    # put model on gpus
-    find_unused_parameters = cfg.get('find_unused_parameters', True)
-    # Sets the `find_unused_parameters` parameter in
-    # torch.nn.parallel.DistributedDataParallel
-    model = MMDistributedDataParallel(
-        model.cuda(),
-        device_ids=[torch.cuda.current_device()],
-        broadcast_buffers=False,
-        find_unused_parameters=find_unused_parameters)
-
+    model = model.cuda()
     # build runner
     optimizer = build_optimizer(model, cfg.optimizer)
 
@@ -127,9 +118,6 @@ def train_model(model,
         runner.load_checkpoint(cfg.load_from)
 
     runner.run(data_loaders, cfg.workflow, cfg.total_epochs)
-
-    dist.barrier()
-    time.sleep(2)
 
     if test['test_last'] or test['test_best']:
         best_ckpt_path = None
@@ -178,20 +166,18 @@ def train_model(model,
             if ckpt is not None:
                 runner.load_checkpoint(ckpt)
 
-            outputs = multi_gpu_test(runner.model, test_dataloader, tmpdir)
-            rank, _ = get_dist_info()
-            if rank == 0:
-                out = osp.join(cfg.work_dir, f'{name}_pred.pkl')
-                test_dataset.dump_results(outputs, out)
+            outputs = single_gpu_test(runner.model, test_dataloader, tmpdir)
+            out = osp.join(cfg.work_dir, f'{name}_pred.pkl')
+            test_dataset.dump_results(outputs, out)
 
-                eval_cfg = cfg.get('evaluation', {})
-                for key in [
+            eval_cfg = cfg.get('evaluation', {})
+            for key in [
                         'interval', 'tmpdir', 'start',
                         'save_best', 'rule', 'by_epoch', 'broadcast_bn_buffers'
-                ]:
-                    eval_cfg.pop(key, None)
+            ]:
+                eval_cfg.pop(key, None)
 
-                eval_res = test_dataset.evaluate(outputs, **eval_cfg)
-                logger.info(f'Testing results of the {name} checkpoint')
-                for metric_name, val in eval_res.items():
-                    logger.info(f'{metric_name}: {val:.04f}')
+            eval_res = test_dataset.evaluate(outputs, **eval_cfg)
+            logger.info(f'Testing results of the {name} checkpoint')
+            for metric_name, val in eval_res.items():
+                logger.info(f'{metric_name}: {val:.04f}')

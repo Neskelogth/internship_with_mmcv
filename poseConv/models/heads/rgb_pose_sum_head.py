@@ -7,7 +7,7 @@ from .base import BaseHead
 
 
 @HEADS.register_module()
-class RGBPoseHeadCat(BaseHead):
+class RGBPoseHeadSum(BaseHead):
 
     def __init__(self,
                  num_classes,
