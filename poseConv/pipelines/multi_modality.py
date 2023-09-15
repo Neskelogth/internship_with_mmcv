@@ -200,7 +200,7 @@ class MMCompact:
             imgs = [
                 np.pad(img, ((pad_u, pad_d), (pad_l, pad_r), (0, 0))) for img in imgs
             ]
-        imgs = [img[min_y: max_y, min_x: max_x] for img in imgs]
+        imgs = [img[min_y: max_y, min_x: max_x].cpu() for img in imgs]
         return imgs
 
     def __call__(self, results):
