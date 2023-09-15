@@ -72,7 +72,7 @@ def inference_pytorch(args, cfg, data_loader):
     args.checkpoint = cache_checkpoint(args.checkpoint)
     load_checkpoint(model, args.checkpoint, map_location='cpu')
 
-    outputs = single_gpu_test(model, data_loader)
+    outputs = single_gpu_test(model.to('cuda:0'), data_loader)
 
     return outputs
 

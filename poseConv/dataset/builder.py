@@ -20,7 +20,7 @@ def build_dataloader(dataset,
                      workers_per_gpu,
                      shuffle=True,
                      drop_last=False,
-                     pin_memory=True,
+                     pin_memory=False,
                      persistent_workers=False,
                      **kwargs):
 

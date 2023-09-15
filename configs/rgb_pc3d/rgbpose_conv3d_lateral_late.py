@@ -100,9 +100,9 @@ optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 lr_config = dict(policy='step', step=[12, 16])
 total_epochs = 20
 checkpoint_config = dict(interval=1)
-workflow = [('train', 1)]
+workflow = [('train', 2), ('val', 1)]
 evaluation = dict(interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'], topk=(1, 5),
                   key_indicator='RGBPose_1:1_top1_acc')
-log_config = dict(interval=20, hooks=[dict(type='TextLoggerHook')])
+log_config = dict(interval=100, hooks=[dict(type='TextLoggerHook')])
 work_dir = './work_dirs/rgbpose_conv3d/rgbpose_conv3d'
 load_from = 'https://download.openmmlab.com/mmaction/pyskl/ckpt/rgbpose_conv3d/rgbpose_conv3d_init.pth'

@@ -211,10 +211,6 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
 
         results['test_mode'] = self.test_mode
 
-        # person x frames x 17 x 1/2
-        # print(results.keys(), len(results['keypoint'][0][0]), len(results['keypoint_score'][0][0]))
-        # exit(10)
-
         return self.pipeline(results)
 
     def load_json(self):
