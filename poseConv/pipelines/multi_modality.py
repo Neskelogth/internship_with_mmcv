@@ -200,7 +200,7 @@ class MMCompact:
             imgs = [
                 np.pad(img, ((pad_u, pad_d), (pad_l, pad_r), (0, 0))) for img in imgs
             ]
-        imgs = [img[min_y: max_y, min_x: max_x].cpu() for img in imgs]
+        imgs = [img[min_y: max_y, min_x: max_x] for img in imgs]
         return imgs
 
     def __call__(self, results):
@@ -217,7 +217,7 @@ class MMCompact:
 
         new_shape = (max_y - min_y, max_x - min_x)
         results['img_shape'] = new_shape
-        results['imgs'] = self._compact_images(results['imgs'].cpu(), img_shape, (min_x, min_y, max_x, max_y))
+        results['imgs'] = self._compact_images(results['imgs'], img_shape, (min_x, min_y, max_x, max_y))
         return results
 
     def __repr__(self):

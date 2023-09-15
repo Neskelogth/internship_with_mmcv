@@ -76,7 +76,4 @@ class RGBPoseHead(BaseHead):
         cls_scores['rgb'] = self.fc_rgb(x_rgb)
         cls_scores['pose'] = self.fc_pose(x_pose)
 
-        print('rgb_pose_head', cls_scores)
-        exit(42)
-
         return cls_scores

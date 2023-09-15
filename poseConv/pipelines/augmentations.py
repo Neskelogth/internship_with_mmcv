@@ -349,7 +349,7 @@ class RandomResizedCrop(RandomCrop):
         results['img_shape'] = (new_h, new_w)
 
         if 'keypoint' in results:
-            results['keypoint'] = self._crop_kps(results['keypoint'], crop_bbox)
+            results['keypoint'] = self._crop_kps(results['keypoint'].cpu()  , crop_bbox)
         if 'imgs' in results:
             results['imgs'] = self._crop_imgs(results['imgs'], crop_bbox)
 

@@ -93,10 +93,10 @@ class GeneratePoseTarget:
                 continue
 
             mu_x, mu_y = center[0], center[1]
-            st_x = max(int(mu_x - 3 * sigma), 0)
-            ed_x = min(int(mu_x + 3 * sigma) + 1, img_w)
-            st_y = max(int(mu_y - 3 * sigma), 0)
-            ed_y = min(int(mu_y + 3 * sigma) + 1, img_h)
+            st_x = min(max(int(mu_x - 3 * sigma), 0), img_w)
+            ed_x = max(min(int(mu_x + 3 * sigma) + 1, img_w), 0)
+            st_y = min(max(int(mu_y - 3 * sigma), 0), img_h)
+            ed_y = max(min(int(mu_y + 3 * sigma) + 1, img_h), 0)
             x = torch.arange(st_x, ed_x, 1, device=DEVICE, dtype=torch.float32)
             y = torch.arange(st_y, ed_y, 1, device=DEVICE, dtype=torch.float32)
 
