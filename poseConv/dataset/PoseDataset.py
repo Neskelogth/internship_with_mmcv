@@ -219,6 +219,7 @@ class PoseDataset(BaseDataset):
             result['keypoint_score'] = result['keypoint'].reshape(len(frame_list), -1, 17)
             result['keypoint_score'] = np.transpose(result['keypoint_score'], (1, 0, 2))
             result['keypoint'] = np.transpose(result['keypoint'], (1, 0, 2, 3))
+            results.append(result)
             # print(result['keypoint'].shape)
 
         return results
