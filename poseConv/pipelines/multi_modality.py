@@ -175,7 +175,7 @@ class MMCompact:
         else:
             min_x, min_y = int(min_x), int(min_y)
             max_x, max_y = int(max_x), int(max_y)
-        return (min_x.cpu(), min_y.cpu(), max_x.cpu(), max_y.cpu())
+        return (min_x, min_y, max_x, max_y)
 
     def _compact_images(self, imgs, img_shape, box):
         h, w = img_shape
@@ -217,7 +217,7 @@ class MMCompact:
 
         new_shape = (max_y - min_y, max_x - min_x)
         results['img_shape'] = new_shape
-        results['imgs'] = self._compact_images(results['imgs'], img_shape, (min_x, min_y, max_x, max_y))
+        results['imgs'] = self._compact_images(results['imgs'].cpu(), img_shape, (min_x, min_y, max_x, max_y))
         return results
 
     def __repr__(self):
