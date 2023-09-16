@@ -167,6 +167,8 @@ class PoseDataset(BaseDataset):
             data = [x for x in data if x[identifier] in split]
             if 'train' not in self.split:
                 data = data[:4000]
+            else:
+                data = data[:10000]
 
         for item in data:
             item['frame_dir'] = os.path.join(self.data_prefix, item['frame_dir'])
@@ -184,6 +186,8 @@ class PoseDataset(BaseDataset):
         folder_list = [file for file in folder_list if file in split_clips]
         if 'train' not in self.split:
             folder_list = folder_list[:4000]
+        else:
+            folder_list = folder_list[:10000]
 
         for folder in tqdm(folder_list):
             result = dict()
