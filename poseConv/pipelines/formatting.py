@@ -15,7 +15,7 @@ def to_tensor(data):
     :class:`Sequence`, :class:`int` and :class:`float`.
     """
     if isinstance(data, torch.Tensor):
-        return data
+        return data.to(torch.float32)
     if isinstance(data, np.ndarray):
         return torch.from_numpy(data).to(torch.float32)
     if isinstance(data, Sequence) and not mmcv.is_str(data):

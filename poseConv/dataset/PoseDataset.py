@@ -154,7 +154,8 @@ class PoseDataset(BaseDataset):
         if self.origin == 'pkl':
             return self.load_pkl_annotations()
         else:
-            return self.load_json_annotations_skeleton()
+            return self.load_json_annotations_skeletons()
+
 
     def load_pkl_annotations(self):
         data = mmcv.load(self.ann)
@@ -164,24 +165,26 @@ class PoseDataset(BaseDataset):
             identifier = 'frame_dir'
             split = set(split[self.split])
             data = [x for x in data if x[identifier] in split]
-            data = data[:4000]
+            if 'train' not in self.split:
+                data = data[:4000]
 
         for item in data:
             item['frame_dir'] = os.path.join(self.data_prefix, item['frame_dir'])
 
         return data
 
-    def load_json_annotations_skeleton(self):
+    def load_json_annotations_skeletons(self):
 
         results = list()
 
-        split_clips = open(os.path.join('../splits/', self.split + '.txt')).readlines()
+        split_clips = open(os.path.join('./splits/', self.split + '.txt')).readlines()
         split_clips = [item.strip() for item in split_clips]
         folder_list = os.listdir(self.ann)
         folder_list = [item.replace('_rgb', '') for item in folder_list]
         folder_list = [file for file in folder_list if file in split_clips]
-        folder_list = folder_list[:4000]
-        # folder_list = [file for file in folder_list if file == 'S004C002P020R001A052']
+        if 'train' not in self.split:
+            folder_list = folder_list[:4000]
+
         for folder in tqdm(folder_list):
             result = dict()
             folder_path = os.path.join(self.ann, folder + '_rgb')

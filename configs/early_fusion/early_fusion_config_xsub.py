@@ -15,7 +15,7 @@ model = dict(
 
 
 dataset_type = 'PoseDataset'
-data_root = '../../datasets/nturgbd/nturgb+d/'
+data_root = '../../datasets/nturgbd/nturgb+d_rgb/'
 ann_file = './data/nturgbd/ntu60_hrnet.pkl'
 left_kp = [1, 3, 5, 7, 9, 11, 13, 15]
 right_kp = [2, 4, 6, 8, 10, 12, 14, 16]
@@ -61,10 +61,9 @@ test_pipeline = [
     dict(type='ToTensor', keys=['imgs', 'label'])
 ]
 
-
 data = dict(
     videos_per_gpu=4,
-    workers_per_gpu=8,
+    workers_per_gpu=2,
     val_dataloader=dict(videos_per_gpu=4),
     test_dataloader=dict(videos_per_gpu=4),
     train=dict(type=dataset_type, ann_file=ann_file, split='xsub_train', data_prefix=data_root,

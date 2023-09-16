@@ -14,7 +14,7 @@ model = dict(
     test_cfg=dict(average_clips='prob'))
 
 dataset_type = 'PoseDataset'
-ann_file = '../data/nturgbd/ntu60_hrnet.pkl'
+ann_file = './data/nturgbd/ntu60_hrnet.pkl'
 left_kp = [1, 3, 5, 7, 9, 11, 13, 15]
 right_kp = [2, 4, 6, 8, 10, 12, 14, 16]
 train_pipeline = [  # 37646 for xview, 40091 for xsub
@@ -51,9 +51,9 @@ test_pipeline = [  # 16487 elements for xsub, 18932 for xview
     dict(type='ToTensor', keys=['imgs'])
 ]
 data = dict(
-    videos_per_gpu=1,  # batch size
-    workers_per_gpu=1,  # num workers
-    test_dataloader=dict(videos_per_gpu=1, workers_per_gpu=1),
+    videos_per_gpu=2,  # batch size
+    workers_per_gpu=8,  # num workers
+    test_dataloader=dict(videos_per_gpu=2, workers_per_gpu=2),
     train=dict(
         type='RepeatDataset',
         times=10,
@@ -70,4 +70,4 @@ checkpoint_config = dict(interval=1)
 evaluation = dict(interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'], topk=(1, 5))
 log_config = dict(interval=20, hooks=[dict(type='TextLoggerHook')])
 log_level = 'INFO'
-work_dir = './work_dirs/posec3d/c3d_light_ntu60_xsub/joint'
+work_dir = './work_dirs/posec3d/c3d_light_ntu60_xsub/joint/xsub'

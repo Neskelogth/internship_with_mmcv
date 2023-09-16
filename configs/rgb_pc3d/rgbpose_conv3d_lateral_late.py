@@ -41,8 +41,8 @@ model = dict(
     test_cfg=test_cfg)
 
 dataset_type = 'PoseDataset'
-data_root = '../data/nturgbd_videos/'
-ann_file = '../data/nturgbd/ntu60_hrnet.pkl'
+data_root = '../../datasets/nturgbd/nturgb+d_rgb/'
+ann_file = '../json_outputs_openpose'
 left_kp = [1, 3, 5, 7, 9, 11, 13, 15]
 right_kp = [2, 4, 6, 8, 10, 12, 14, 16]
 img_norm_cfg = dict(
@@ -92,7 +92,7 @@ data = dict(
     train=dict(type=dataset_type, ann_file=ann_file, split='xsub_train', data_prefix=data_root,
                pipeline=train_pipeline),
     val=dict(type=dataset_type, ann_file=ann_file, split='xsub_val', data_prefix=data_root, pipeline=val_pipeline),
-    test=dict(type=dataset_type, ann_file=ann_file, split='xsub_val', data_prefix=data_root, pipeline=test_pipeline))
+    test=dict(type=dataset_type, ann_file=ann_file, split='xsub_val', data_prefix=data_root, pipeline=test_pipeline, origin='json'))
 # optimizer
 optimizer = dict(type='Adam', lr=1e-5)  # this lr is used for 8 gpus
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
@@ -100,7 +100,7 @@ optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 lr_config = dict(policy='step', step=[12, 16])
 total_epochs = 20
 checkpoint_config = dict(interval=1)
-workflow = [('train', 2), ('val', 1)]
+workflow = [('train', 1)]
 evaluation = dict(interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'], topk=(1, 5),
                   key_indicator='RGBPose_1:1_top1_acc')
 log_config = dict(interval=100, hooks=[dict(type='TextLoggerHook')])

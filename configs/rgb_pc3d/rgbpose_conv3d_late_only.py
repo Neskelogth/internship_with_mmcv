@@ -41,8 +41,8 @@ model = dict(
     test_cfg=test_cfg)
 
 dataset_type = 'PoseDataset'
-data_root = 'data/nturgbd_videos/'
-ann_file = '../data/nturgbd/ntu60_hrnet.pkl'
+data_root = '../../datasets/nturgbd/nturgb+d_rgb'
+ann_file = '../json_outputs_openpose'
 left_kp = [1, 3, 5, 7, 9, 11, 13, 15]
 right_kp = [2, 4, 6, 8, 10, 12, 14, 16]
 img_norm_cfg = dict(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_bgr=False)
@@ -85,13 +85,13 @@ test_pipeline = [
 ]
 
 data = dict(
-    videos_per_gpu=6,
+    videos_per_gpu=1,
     workers_per_gpu=4,
     val_dataloader=dict(videos_per_gpu=1),
     test_dataloader=dict(videos_per_gpu=1),
     train=dict(type=dataset_type, ann_file=ann_file, split='xsub_train', data_prefix=data_root, pipeline=train_pipeline),
     val=dict(type=dataset_type, ann_file=ann_file, split='xsub_val', data_prefix=data_root, pipeline=val_pipeline),
-    test=dict(type=dataset_type, ann_file=ann_file, split='xsub_val', data_prefix=data_root, pipeline=test_pipeline))
+    test=dict(type=dataset_type, ann_file=ann_file, split='xsub_val', data_prefix=data_root, pipeline=test_pipeline, origin='json'))
 # optimizer
 optimizer = dict(type='Adam', lr=1e-5)  # this lr is used for 8 gpus
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))

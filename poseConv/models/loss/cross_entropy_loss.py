@@ -48,6 +48,7 @@ class CrossEntropyLoss(BaseWeightedLoss):
         Returns:
             torch.Tensor: The returned CrossEntropy loss.
         """
+
         if cls_score.size() == label.size():
             # calculate loss for soft label
 
@@ -77,6 +78,8 @@ class CrossEntropyLoss(BaseWeightedLoss):
                 assert 'weight' not in kwargs, \
                     "The key 'weight' already exists."
                 kwargs['weight'] = self.class_weight.to(cls_score.device)
+
+            label = label.type(torch.LongTensor).to('cuda:0')
             loss_cls = F.cross_entropy(cls_score, label, **kwargs)
 
         return loss_cls

@@ -38,6 +38,8 @@ class DecordInit:
             raise ImportError(
                 'Please run "pip install decord" to install Decord first.')
 
+        # print(filename)
+
         if self.file_client is None:
             self.file_client = FileClient(self.io_backend, **self.kwargs)
         file_obj = io.BytesIO(self.file_client.get(filename))

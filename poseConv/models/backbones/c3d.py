@@ -77,6 +77,9 @@ class C3D(nn.Module):
             torch.Tensor: The feature of the input samples extracted by the backbone.
         """
 
+        if len(x.shape) == 4:
+            x = x.view((1,) + x.shape)
+
         x = self.conv1a(x)
 
         x = self.pool1(x)
