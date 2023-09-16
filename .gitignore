@@ -3,6 +3,7 @@ data/
 venv/
 work_dirs/
 
+*/.cache
 .idea/
 */__pycache__/
 */*/__pycache__/

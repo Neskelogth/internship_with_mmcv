@@ -1,3 +1,4 @@
+import os
 import copy
 import mmcv
 import numpy as np
@@ -213,8 +214,21 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
 
         return self.pipeline(results)
 
-    def load_json(self):
-        pass
+    def load_json_annotations(self):
+        """Load json annotation file to get video information."""
+        video_infos = mmcv.load(self.ann_file)
+        num_videos = len(video_infos)
+        path_key = 'frame_dir' if 'frame_dir' in video_infos[0] else 'filename'
+        for i in range(num_videos):
+            path_value = video_infos[i][path_key]
+            path_value = os.path.join(self.data_prefix, path_value)
+            video_infos[i][path_key] = path_value
+            if self.multi_class:
+                assert self.num_classes is not None
+            else:
+                assert len(video_infos[i]['label']) == 1
+                video_infos[i]['label'] = video_infos[i]['label'][0]
+        return video_infos
 
     def __getitem__(self, idx):
         if self.test_mode:

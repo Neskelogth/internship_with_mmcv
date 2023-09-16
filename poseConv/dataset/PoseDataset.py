@@ -154,7 +154,7 @@ class PoseDataset(BaseDataset):
         if self.origin == 'pkl':
             return self.load_pkl_annotations()
         else:
-            return self.load_json_annotations()
+            return self.load_json_annotations_skeleton()
 
     def load_pkl_annotations(self):
         data = mmcv.load(self.ann)
@@ -171,7 +171,7 @@ class PoseDataset(BaseDataset):
 
         return data
 
-    def load_json_annotations(self):
+    def load_json_annotations_skeleton(self):
 
         results = list()
 
@@ -220,6 +220,8 @@ class PoseDataset(BaseDataset):
             result['keypoint_score'] = np.transpose(result['keypoint_score'], (1, 0, 2))
             result['keypoint'] = np.transpose(result['keypoint'], (1, 0, 2, 3))
             results.append(result)
-            # print(result['keypoint'].shape)
+
+        for item in results:
+            item['frame_dir'] = os.path.join(self.data_prefix, item['frame_dir'])
 
         return results

@@ -41,7 +41,7 @@ val_pipeline = [
     dict(type='ToTensor', keys=['imgs'])
 ]
 test_pipeline = [  # 16487 elements for xsub, 18932 for xview
-    dict(type='UniformSampleFrames', clip_len=48, num_clips=10),
+    dict(type='UniformSampleFrames', clip_len=48, num_clips=1),
     dict(type='PoseDecode'),
     dict(type='PoseCompact'),
     dict(type='Resize', scale=(64, 64), keep_ratio=False),
@@ -51,9 +51,9 @@ test_pipeline = [  # 16487 elements for xsub, 18932 for xview
     dict(type='ToTensor', keys=['imgs'])
 ]
 data = dict(
-    videos_per_gpu=2,  # batch size
-    workers_per_gpu=2,  # num workers
-    test_dataloader=dict(videos_per_gpu=2, workers_per_gpu=2),
+    videos_per_gpu=1,  # batch size
+    workers_per_gpu=1,  # num workers
+    test_dataloader=dict(videos_per_gpu=1, workers_per_gpu=1),
     train=dict(
         type='RepeatDataset',
         times=10,

@@ -36,7 +36,6 @@ class MMRecognizer3D(BaseRecognizer):
     def forward_test(self, imgs, heatmap_imgs, img_metas=None):
         """Defines the computation performed at every call when evaluation and
         testing."""
-        assert imgs.shape[0] == 1 and heatmap_imgs.shape[0] == 1
         assert not hasattr(self, 'neck')
         imgs = imgs.reshape((-1, ) + imgs.shape[2:])
         heatmap_imgs = heatmap_imgs.reshape((-1, ) + heatmap_imgs.shape[2:])

@@ -17,11 +17,11 @@ def to_tensor(data):
     if isinstance(data, torch.Tensor):
         return data
     if isinstance(data, np.ndarray):
-        return torch.from_numpy(data)
+        return torch.from_numpy(data).to(torch.float32)
     if isinstance(data, Sequence) and not mmcv.is_str(data):
-        return torch.tensor(data)
+        return torch.tensor(data).to(torch.float32)
     if isinstance(data, int):
-        return torch.LongTensor([data])
+        return torch.LongTensor([data]).to(torch.float32)
     if isinstance(data, float):
         return torch.FloatTensor([data])
     raise TypeError(f'type {type(data)} cannot be converted to tensor.')
@@ -137,6 +137,7 @@ class Collect:
                 to the next transform in pipeline.
         """
         data = {}
+
         for key in self.keys:
             data[key] = results[key]
 
