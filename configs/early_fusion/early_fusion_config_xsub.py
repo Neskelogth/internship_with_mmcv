@@ -62,7 +62,7 @@ test_pipeline = [
 ]
 
 data = dict(
-    videos_per_gpu=4,
+    videos_per_gpu=2,
     workers_per_gpu=2,
     val_dataloader=dict(videos_per_gpu=4),
     test_dataloader=dict(videos_per_gpu=4),

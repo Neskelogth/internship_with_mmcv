@@ -63,7 +63,6 @@ def main():
 
     args = parse_args()
     cfg = Config.fromfile(args.config)
-    save_checkpoint_path = '../checkpoints/'
 
     torch.multiprocessing.set_start_method('spawn')
 
@@ -140,8 +139,6 @@ def main():
 
     test_option = dict(test_last=args.test_last, test_best=args.test_best)
     train_model(model, datasets, cfg, validate=args.validate, test=test_option, timestamp=timestamp, meta=meta)
-
-    torch.save(model.state_dict(), save_checkpoint_path + args.config.split('/')[-1][:-3] + '.pth')
 
 
 if __name__ == '__main__':

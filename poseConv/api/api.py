@@ -6,7 +6,7 @@ import torch
 import torch.distributed as dist
 from mmcv.engine import single_gpu_test
 from mmcv.parallel import MMDistributedDataParallel
-from mmcv.runner import DistSamplerSeedHook, EpochBasedRunner, OptimizerHook, build_optimizer, get_dist_info
+from mmcv.runner import DistSamplerSeedHook, EpochBasedRunner, OptimizerHook, build_optimizer, get_dist_info, wrap_fp16_model
 
 from ..utils import DistEvalHook
 from ..dataset import build_dataloader, build_dataset
@@ -72,6 +72,7 @@ def train_model(model,
     ]
 
     model = model.cuda()
+    wrap_fp16_model(model)
     # build runner
     optimizer = build_optimizer(model, cfg.optimizer)
 
