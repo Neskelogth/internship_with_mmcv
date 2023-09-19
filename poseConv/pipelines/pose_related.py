@@ -1,7 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 from scipy.stats import mode as get_mode
-import torch
 
 from ..dataset.builder import PIPELINES
 # from .compose import Compose
@@ -21,16 +20,16 @@ class PoseDecode:
 
     @staticmethod
     def _load_kp(kp, frame_inds):
-        return torch.from_numpy(kp[:, frame_inds].astype(np.float32))
+        return kp[:, frame_inds].astype(np.float32)
 
     @staticmethod
     def _load_kpscore(kpscore, frame_inds):
-        return torch.from_numpy(kpscore[:, frame_inds].astype(np.float32))
+        return kpscore[:, frame_inds].astype(np.float32)
 
     def __call__(self, results):
 
         if 'frame_inds' not in results:
-            results['frame_inds'] = torch.arange(results['total_frames'], device=DEVICE)
+            results['frame_inds'] = np.arange(results['total_frames'])
 
         if results['frame_inds'].ndim != 1:
             results['frame_inds'] = np.squeeze(results['frame_inds'])
@@ -39,10 +38,10 @@ class PoseDecode:
         frame_inds = results['frame_inds'] + offset
 
         if 'keypoint_score' in results:
-            results['keypoint_score'] = self._load_kpscore(results['keypoint_score'], frame_inds).to(DEVICE)
+            results['keypoint_score'] = self._load_kpscore(results['keypoint_score'], frame_inds)
 
         if 'keypoint' in results:
-            results['keypoint'] = self._load_kp(results['keypoint'], frame_inds).to(DEVICE)
+            results['keypoint'] = self._load_kp(results['keypoint'], frame_inds)
 
         return results
 
