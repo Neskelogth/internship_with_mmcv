@@ -2,10 +2,9 @@
 import numpy as np
 
 from ..dataset.builder import PIPELINES
-import torch
 
+EPS = 1e-3
 
-DEVICE = 'cuda:0'
 
 @PIPELINES.register_module()
 class GeneratePoseTarget:
@@ -55,8 +54,7 @@ class GeneratePoseTarget:
                  right_kp=(2, 4, 6, 8, 10, 12, 14, 16),
                  left_limb=(0, 2, 4, 5, 6, 10, 11, 12),
                  right_limb=(1, 3, 7, 8, 9, 13, 14, 15),
-                 scaling=1.,
-                 eps=1e-3):
+                 scaling=1.):
 
         self.sigma = sigma
         self.use_score = use_score
@@ -64,14 +62,13 @@ class GeneratePoseTarget:
         self.with_limb = with_limb
         self.double = double
 
-        assert self.with_kp + self.with_limb == 1, 'One of "with_limb" and "with_kp" should be set as True.'
+        assert self.with_kp + self.with_limb == 1, ('One of "with_limb" and "with_kp" should be set as True.')
         self.left_kp = left_kp
         self.right_kp = right_kp
         self.skeletons = skeletons
         self.left_limb = left_limb
         self.right_limb = right_limb
         self.scaling = scaling
-        self.eps = eps
 
     def generate_a_heatmap(self, arr, centers, max_values):
         """Generate pseudo heatmap for one keypoint in one frame.
@@ -89,14 +86,14 @@ class GeneratePoseTarget:
         img_h, img_w = arr.shape
 
         for center, max_value in zip(centers, max_values):
-            if max_value < self.eps:
+            if max_value < EPS:
                 continue
 
             mu_x, mu_y = center[0], center[1]
-            st_x = min(max(int(mu_x - 3 * sigma), 0), img_w)
-            ed_x = max(min(int(mu_x + 3 * sigma) + 1, img_w), 0)
-            st_y = min(max(int(mu_y - 3 * sigma), 0), img_h)
-            ed_y = max(min(int(mu_y + 3 * sigma) + 1, img_h), 0)
+            st_x = max(int(mu_x - 3 * sigma), 0)
+            ed_x = min(int(mu_x + 3 * sigma) + 1, img_w)
+            st_y = max(int(mu_y - 3 * sigma), 0)
+            ed_y = min(int(mu_y + 3 * sigma) + 1, img_h)
             x = np.arange(st_x, ed_x, 1, np.float32)
             y = np.arange(st_y, ed_y, 1, np.float32)
 
@@ -106,8 +103,7 @@ class GeneratePoseTarget:
             y = y[:, None]
 
             patch = np.exp(-((x - mu_x)**2 + (y - mu_y)**2) / 2 / sigma**2)
-            if self.use_score:
-                patch = patch * max_value
+            patch = patch * max_value
             arr[st_y:ed_y, st_x:ed_x] = np.maximum(arr[st_y:ed_y, st_x:ed_x], patch)
 
     def generate_a_limb_heatmap(self, arr, starts, ends, start_values, end_values):
@@ -129,7 +125,7 @@ class GeneratePoseTarget:
 
         for start, end, start_value, end_value in zip(starts, ends, start_values, end_values):
             value_coeff = min(start_value, end_value)
-            if value_coeff < self.eps:
+            if value_coeff < EPS:
                 continue
 
             min_x, max_x = min(start[0], end[0]), max(start[0], end[0])
@@ -176,8 +172,7 @@ class GeneratePoseTarget:
             d2_seg = a_dominate * d2_start + b_dominate * d2_end + seg_dominate * d2_line
 
             patch = np.exp(-d2_seg / 2. / sigma**2)
-            if self.use_score:
-                patch = patch * value_coeff
+            patch = patch * value_coeff
 
             arr[min_y:max_y, min_x:max_x] = np.maximum(arr[min_y:max_y, min_x:max_x], patch)
 
@@ -225,7 +220,7 @@ class GeneratePoseTarget:
         if 'keypoint_score' in results:
             all_kpscores = results['keypoint_score']
         else:
-            all_kpscores = np.ones(kp_shape[:-1], np.float32)
+            all_kpscores = np.ones(kp_shape[:-1], dtype=np.float32)
 
         img_h, img_w = results['img_shape']
 
@@ -240,7 +235,7 @@ class GeneratePoseTarget:
             num_c += all_kps.shape[2]
         if self.with_limb:
             num_c += len(self.skeletons)
-        ret = np.zeros([num_frame, num_c, img_h, img_w], np.float32)
+        ret = np.zeros([num_frame, num_c, img_h, img_w], dtype=np.float32)
 
         for i in range(num_frame):
             # M, V, C
@@ -256,7 +251,7 @@ class GeneratePoseTarget:
         key = 'heatmap_imgs' if 'imgs' in results else 'imgs'
 
         if self.double:
-            indices = np.arange(heatmap.shape[1])
+            indices = np.arange(heatmap.shape[1], dtype=np.int64)
             left, right = (self.left_kp, self.right_kp) if self.with_kp else (self.left_limb, self.right_limb)
             for l, r in zip(left, right):  # noqa: E741
                 indices[l] = r
@@ -278,75 +273,76 @@ class GeneratePoseTarget:
                     f'right_kp={self.right_kp})')
         return repr_str
 
+
 # The Input will be a feature map ((N x T) x H x W x K), The output will be
 # a 2D map: (N x H x W x [K * (2C + 1)])
 # N is #clips x #crops, K is num_kpt
-# @PIPELINES.register_module()
-# class Heatmap2Potion:
-#
-#     def __init__(self, C, option='full'):
-#         self.C = C
-#         self.option = option
-#         self.eps = 1e-4
-#         assert isinstance(C, int)
-#         assert C >= 2
-#         assert self.option in ['U', 'N', 'I', 'full']
-#
-#     def __call__(self, results):
-#         heatmaps = results['imgs']
-#
-#         if 'clip_len' in results:
-#             clip_len = results['clip_len']
-#         else:
-#             # Just for Video-PoTion generation
-#             clip_len = heatmaps.shape[0]
-#
-#         C = self.C
-#         heatmaps = heatmaps.reshape((-1, clip_len) + heatmaps.shape[1:])
-#         # num_clip, clip_len, C, H, W
-#         heatmaps = heatmaps.transpose(0, 1, 3, 4, 2)
-#
-#         # t in {0, 1, 2, ..., clip_len - 1}
-#         def idx2color(t):
-#             st = np.zeros(C, dtype=np.float32)
-#             ed = np.zeros(C, dtype=np.float32)
-#             if t == clip_len - 1:
-#                 ed[C - 1] = 1.
-#                 return ed
-#             val = t / (clip_len - 1) * (C - 1)
-#             bin_idx = int(val)
-#             val = val - bin_idx
-#             st[bin_idx] = 1.
-#             ed[bin_idx + 1] = 1.
-#             return (1 - val) * st + val * ed
-#
-#         heatmaps_wcolor = []
-#         for i in range(clip_len):
-#             color = idx2color(i)
-#             heatmap = heatmaps[:, i]
-#             heatmap = heatmap[..., None]
-#             heatmap = np.matmul(heatmap, color[None, ])
-#             heatmaps_wcolor.append(heatmap)
-#
-#         # The shape of each element is N x H x W x K x C
-#         heatmap_S = np.sum(heatmaps_wcolor, axis=0)
-#         # The shape of U_norm is N x 1 x 1 x K x C
-#         U_norm = np.max(
-#             np.max(heatmap_S, axis=1, keepdims=True), axis=2, keepdims=True)
-#         heatmap_U = heatmap_S / (U_norm + self.eps)
-#         heatmap_I = np.sum(heatmap_U, axis=-1, keepdims=True)
-#         heatmap_N = heatmap_U / (heatmap_I + 1)
-#         if self.option == 'U':
-#             heatmap = heatmap_U
-#         elif self.option == 'I':
-#             heatmap = heatmap_I
-#         elif self.option == 'N':
-#             heatmap = heatmap_N
-#         elif self.option == 'full':
-#             heatmap = np.concatenate([heatmap_U, heatmap_I, heatmap_N],
-#                                      axis=-1)
-#
-#         # Reshape the heatmap to 4D
-#         heatmap = heatmap.reshape(heatmap.shape[:3] + (-1, ))
-#         results['imgs'] = heatmap
-#         return results
+@PIPELINES.register_module()
+class Heatmap2Potion:
+
+    def __init__(self, C, option='full'):
+        self.C = C
+        self.option = option
+        self.eps = 1e-4
+        assert isinstance(C, int)
+        assert C >= 2
+        assert self.option in ['U', 'N', 'I', 'full']
+
+    def __call__(self, results):
+        heatmaps = results['imgs']
+
+        if 'clip_len' in results:
+            clip_len = results['clip_len']
+        else:
+            # Just for Video-PoTion generation
+            clip_len = heatmaps.shape[0]
+
+        C = self.C
+        heatmaps = heatmaps.reshape((-1, clip_len) + heatmaps.shape[1:])
+        # num_clip, clip_len, C, H, W
+        heatmaps = heatmaps.transpose(0, 1, 3, 4, 2)
+
+        # t in {0, 1, 2, ..., clip_len - 1}
+        def idx2color(t):
+            st = np.zeros(C, dtype=np.float32)
+            ed = np.zeros(C, dtype=np.float32)
+            if t == clip_len - 1:
+                ed[C - 1] = 1.
+                return ed
+            val = t / (clip_len - 1) * (C - 1)
+            bin_idx = int(val)
+            val = val - bin_idx
+            st[bin_idx] = 1.
+            ed[bin_idx + 1] = 1.
+            return (1 - val) * st + val * ed
+
+        heatmaps_wcolor = []
+        for i in range(clip_len):
+            color = idx2color(i)
+            heatmap = heatmaps[:, i]
+            heatmap = heatmap[..., None]
+            heatmap = np.matmul(heatmap, color[None, ])
+            heatmaps_wcolor.append(heatmap)
+
+        # The shape of each element is N x H x W x K x C
+        heatmap_S = np.sum(heatmaps_wcolor, axis=0)
+        # The shape of U_norm is N x 1 x 1 x K x C
+        U_norm = np.max(
+            np.max(heatmap_S, axis=1, keepdims=True), axis=2, keepdims=True)
+        heatmap_U = heatmap_S / (U_norm + self.eps)
+        heatmap_I = np.sum(heatmap_U, axis=-1, keepdims=True)
+        heatmap_N = heatmap_U / (heatmap_I + 1)
+        if self.option == 'U':
+            heatmap = heatmap_U
+        elif self.option == 'I':
+            heatmap = heatmap_I
+        elif self.option == 'N':
+            heatmap = heatmap_N
+        elif self.option == 'full':
+            heatmap = np.concatenate([heatmap_U, heatmap_I, heatmap_N],
+                                     axis=-1)
+
+        # Reshape the heatmap to 4D
+        heatmap = heatmap.reshape(heatmap.shape[:3] + (-1, ))
+        results['imgs'] = heatmap
+        return results

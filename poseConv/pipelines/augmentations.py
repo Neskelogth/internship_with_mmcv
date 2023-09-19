@@ -2,7 +2,7 @@
 import mmcv
 import numpy as np
 import random
-# import warnings
+import warnings
 from collections.abc import Sequence
 from torch.nn.modules.utils import _pair
 
@@ -16,7 +16,7 @@ def _combine_quadruple(a, b):
 @PIPELINES.register_module()
 class PoseCompact:
     """Convert the coordinates of keypoints to make it more compact.
-    Specifically, it first finds a tight bounding box that surrounds all joints
+    Specifically, it first find a tight bounding box that surrounds all joints
     in each frame, then we expand the tight box by a given padding ratio. For
     example, if 'padding == 0.25', then the expanded box has unchanged center,
     and 1.25x width and height.
@@ -43,7 +43,7 @@ class PoseCompact:
     def __init__(self,
                  padding=0.25,
                  threshold=10,
-                 hw_ratio=1.,
+                 hw_ratio=None,
                  allow_imgpad=True):
 
         self.padding = padding
@@ -66,10 +66,10 @@ class PoseCompact:
         kp_x = kp[..., 0]
         kp_y = kp[..., 1]
 
-        min_x = np.min(kp_x[kp_x != 0] , initial=np.Inf)
-        min_y = np.min(kp_y[kp_y != 0] , initial=np.Inf)
-        max_x = np.max(kp_x[kp_x != 0] , initial=-np.Inf)
-        max_y = np.max(kp_y[kp_y != 0] , initial=-np.Inf)
+        min_x = np.min(kp_x[kp_x != 0], initial=np.Inf)
+        min_y = np.min(kp_y[kp_y != 0], initial=np.Inf)
+        max_x = np.max(kp_x[kp_x != 0], initial=-np.Inf)
+        max_y = np.max(kp_y[kp_y != 0], initial=-np.Inf)
 
         # The compact area is too small
         if max_x - min_x < self.threshold or max_y - min_y < self.threshold:
@@ -249,7 +249,7 @@ class RandomResizedCrop(RandomCrop):
     """
 
     def __init__(self,
-                 area_range=(0.56, 1.0),
+                 area_range=(0.08, 1.0),
                  aspect_ratio_range=(3 / 4, 4 / 3)):
         self.area_range = area_range
         self.aspect_ratio_range = aspect_ratio_range
@@ -348,7 +348,7 @@ class RandomResizedCrop(RandomCrop):
         results['img_shape'] = (new_h, new_w)
 
         if 'keypoint' in results:
-            results['keypoint'] = self._crop_kps(results['keypoint'].cpu()  , crop_bbox)
+            results['keypoint'] = self._crop_kps(results['keypoint'], crop_bbox)
         if 'imgs' in results:
             results['imgs'] = self._crop_imgs(results['imgs'], crop_bbox)
 
@@ -445,7 +445,8 @@ class Resize:
         else:
             new_w, new_h = self.scale
 
-        self.scale_factor = np.array([new_w / img_w, new_h / img_h], dtype=np.float32)
+        self.scale_factor = np.array([new_w / img_w, new_h / img_h],
+                                     dtype=np.float32)
 
         results['img_shape'] = (new_h, new_w)
         results['keep_ratio'] = self.keep_ratio
@@ -603,216 +604,6 @@ class Flip:
         return repr_str
 
 
-# @PIPELINES.register_module()
-# class CenterCrop(RandomCrop):
-#     """Crop the center area from images.
-#
-#     Required keys are "img_shape", "imgs" (optional), "keypoint" (optional),
-#     added or modified keys are "imgs", "keypoint", "crop_bbox", "img_shape".
-#
-#     Args:
-#         crop_size (int | tuple[int]): (w, h) of crop size.
-#     """
-#
-#     def __init__(self, crop_size):
-#         self.crop_size = _pair(crop_size)
-#         if not mmcv.is_tuple_of(self.crop_size, int):
-#             raise TypeError(f'Crop_size must be int or tuple of int, '
-#                             f'but got {type(crop_size)}')
-#
-#     def __call__(self, results):
-#         """Performs the CenterCrop augmentation.
-#
-#         Args:
-#             results (dict): The resulting dict to be modified and passed
-#                 to the next transform in pipeline.
-#         """
-#         img_h, img_w = results['img_shape']
-#         crop_w, crop_h = self.crop_size
-#
-#         left = (img_w - crop_w) // 2
-#         top = (img_h - crop_h) // 2
-#         right = left + crop_w
-#         bottom = top + crop_h
-#         new_h, new_w = bottom - top, right - left
-#
-#         crop_bbox = np.array([left, top, right, bottom])
-#         results['crop_bbox'] = crop_bbox
-#         results['img_shape'] = (new_h, new_w)
-#
-#         if 'crop_quadruple' not in results:
-#             results['crop_quadruple'] = np.array(
-#                 [0, 0, 1, 1],  # x, y, w, h
-#                 dtype=np.float32)
-#
-#         x_ratio, y_ratio = left / img_w, top / img_h
-#         w_ratio, h_ratio = new_w / img_w, new_h / img_h
-#
-#         old_crop_quadruple = results['crop_quadruple']
-#         old_x_ratio, old_y_ratio = old_crop_quadruple[0], old_crop_quadruple[1]
-#         old_w_ratio, old_h_ratio = old_crop_quadruple[2], old_crop_quadruple[3]
-#         new_crop_quadruple = [
-#             old_x_ratio + x_ratio * old_w_ratio,
-#             old_y_ratio + y_ratio * old_h_ratio, w_ratio * old_w_ratio,
-#             h_ratio * old_h_ratio
-#         ]
-#         results['crop_quadruple'] = np.array(
-#             new_crop_quadruple, dtype=np.float32)
-#
-#         if 'keypoint' in results:
-#             results['keypoint'] = self._crop_kps(results['keypoint'], crop_bbox)
-#         if 'imgs' in results:
-#             results['imgs'] = self._crop_imgs(results['imgs'], crop_bbox)
-#
-#         if 'gt_bboxes' in results:
-#             results = self._all_box_crop(results, results['crop_bbox'])
-#
-#         return results
-#
-#     def __repr__(self):
-#         repr_str = (f'{self.__class__.__name__}(crop_size={self.crop_size})')
-#         return repr_str
-
-
-# @PIPELINES.register_module()
-# class ThreeCrop:
-#     """Crop images into three crops.
-#
-#     Crop the images equally into three crops with equal intervals along the
-#     shorter side. Required keys are "imgs", "img_shape", added or modified keys
-#     are "imgs", "crop_bbox" and "img_shape".
-#
-#     Args:
-#         crop_size(int | tuple[int]): (w, h) of crop size.
-#     """
-#
-#     def __init__(self, crop_size):
-#         self.crop_size = _pair(crop_size)
-#         if not mmcv.is_tuple_of(self.crop_size, int):
-#             raise TypeError(f'Crop_size must be int or tuple of int, '
-#                             f'but got {type(crop_size)}')
-#
-#     def __call__(self, results):
-#         """Performs the ThreeCrop augmentation.
-#
-#         Args:
-#             results (dict): The resulting dict to be modified and passed
-#                 to the next transform in pipeline.
-#         """
-#         if 'gt_bboxes' in results or 'proposals' in results:
-#             warnings.warn('ThreeCrop cannot process bounding boxes')
-#
-#         imgs = results['imgs']
-#         img_h, img_w = results['imgs'][0].shape[:2]
-#         crop_w, crop_h = self.crop_size
-#         assert crop_h == img_h or crop_w == img_w
-#
-#         if crop_h == img_h:
-#             w_step = (img_w - crop_w) // 2
-#             offsets = [
-#                 (0, 0),  # left
-#                 (2 * w_step, 0),  # right
-#                 (w_step, 0),  # middle
-#             ]
-#         elif crop_w == img_w:
-#             h_step = (img_h - crop_h) // 2
-#             offsets = [
-#                 (0, 0),  # top
-#                 (0, 2 * h_step),  # down
-#                 (0, h_step),  # middle
-#             ]
-#
-#         cropped = []
-#         crop_bboxes = []
-#         for x_offset, y_offset in offsets:
-#             bbox = [x_offset, y_offset, x_offset + crop_w, y_offset + crop_h]
-#             crop = [
-#                 img[y_offset:y_offset + crop_h, x_offset:x_offset + crop_w]
-#                 for img in imgs
-#             ]
-#             cropped.extend(crop)
-#             crop_bboxes.extend([bbox for _ in range(len(imgs))])
-#
-#         crop_bboxes = np.array(crop_bboxes)
-#         results['imgs'] = cropped
-#         results['crop_bbox'] = crop_bboxes
-#         results['img_shape'] = results['imgs'][0].shape[:2]
-#
-#         return results
-#
-#     def __repr__(self):
-#         repr_str = f'{self.__class__.__name__}(crop_size={self.crop_size})'
-#         return repr_str
-#
-#
-# @PIPELINES.register_module()
-# class TenCrop:
-#     """Crop the images into 10 crops (corner + center + flip).
-#
-#     Crop the four corners and the center part of the image with the same
-#     given crop_size, and flip it horizontally. Required keys are "imgs",
-#     "img_shape", added or modified keys are "imgs", "crop_bbox" and "img_shape".
-#
-#     Args:
-#         crop_size(int | tuple[int]): (w, h) of crop size.
-#     """
-#
-#     def __init__(self, crop_size):
-#         self.crop_size = _pair(crop_size)
-#         if not mmcv.is_tuple_of(self.crop_size, int):
-#             raise TypeError(f'Crop_size must be int or tuple of int, '
-#                             f'but got {type(crop_size)}')
-#
-#     def __call__(self, results):
-#         """Performs the TenCrop augmentation.
-#
-#         Args:
-#             results (dict): The resulting dict to be modified and passed
-#                 to the next transform in pipeline.
-#         """
-#         if 'gt_bboxes' in results or 'proposals' in results:
-#             warnings.warn('TenCrop cannot process bounding boxes')
-#
-#         imgs = results['imgs']
-#
-#         img_h, img_w = results['imgs'][0].shape[:2]
-#         crop_w, crop_h = self.crop_size
-#
-#         w_step = (img_w - crop_w) // 4
-#         h_step = (img_h - crop_h) // 4
-#
-#         offsets = [
-#             (0, 0),  # upper left
-#             (4 * w_step, 0),  # upper right
-#             (0, 4 * h_step),  # lower left
-#             (4 * w_step, 4 * h_step),  # lower right
-#             (2 * w_step, 2 * h_step),  # center
-#         ]
-#
-#         img_crops = list()
-#         crop_bboxes = list()
-#         for x_offset, y_offsets in offsets:
-#             crop = [
-#                 img[y_offsets:y_offsets + crop_h, x_offset:x_offset + crop_w]
-#                 for img in imgs
-#             ]
-#             flip_crop = [np.flip(c, axis=1).copy() for c in crop]
-#             bbox = [x_offset, y_offsets, x_offset + crop_w, y_offsets + crop_h]
-#             img_crops.extend(crop)
-#             img_crops.extend(flip_crop)
-#             crop_bboxes.extend([bbox for _ in range(len(imgs) * 2)])
-#
-#         crop_bboxes = np.array(crop_bboxes)
-#         results['imgs'] = img_crops
-#         results['crop_bbox'] = crop_bboxes
-#         results['img_shape'] = results['imgs'][0].shape[:2]
-#
-#         return results
-#
-#     def __repr__(self):
-#         repr_str = f'{self.__class__.__name__}(crop_size={self.crop_size})'
-#         return repr_str
-
 @PIPELINES.register_module()
 class Normalize:
     """Normalize images with the given mean and std value.
@@ -896,4 +687,215 @@ class Normalize:
                     f'std={self.std}, '
                     f'to_bgr={self.to_bgr}, '
                     f'adjust_magnitude={self.adjust_magnitude})')
+        return repr_str
+
+
+@PIPELINES.register_module()
+class CenterCrop(RandomCrop):
+    """Crop the center area from images.
+
+    Required keys are "img_shape", "imgs" (optional), "keypoint" (optional),
+    added or modified keys are "imgs", "keypoint", "crop_bbox", "img_shape".
+
+    Args:
+        crop_size (int | tuple[int]): (w, h) of crop size.
+    """
+
+    def __init__(self, crop_size):
+        self.crop_size = _pair(crop_size)
+        if not mmcv.is_tuple_of(self.crop_size, int):
+            raise TypeError(f'Crop_size must be int or tuple of int, '
+                            f'but got {type(crop_size)}')
+
+    def __call__(self, results):
+        """Performs the CenterCrop augmentation.
+
+        Args:
+            results (dict): The resulting dict to be modified and passed
+                to the next transform in pipeline.
+        """
+        img_h, img_w = results['img_shape']
+        crop_w, crop_h = self.crop_size
+
+        left = (img_w - crop_w) // 2
+        top = (img_h - crop_h) // 2
+        right = left + crop_w
+        bottom = top + crop_h
+        new_h, new_w = bottom - top, right - left
+
+        crop_bbox = np.array([left, top, right, bottom])
+        results['crop_bbox'] = crop_bbox
+        results['img_shape'] = (new_h, new_w)
+
+        if 'crop_quadruple' not in results:
+            results['crop_quadruple'] = np.array(
+                [0, 0, 1, 1],  # x, y, w, h
+                dtype=np.float32)
+
+        x_ratio, y_ratio = left / img_w, top / img_h
+        w_ratio, h_ratio = new_w / img_w, new_h / img_h
+
+        old_crop_quadruple = results['crop_quadruple']
+        old_x_ratio, old_y_ratio = old_crop_quadruple[0], old_crop_quadruple[1]
+        old_w_ratio, old_h_ratio = old_crop_quadruple[2], old_crop_quadruple[3]
+        new_crop_quadruple = [
+            old_x_ratio + x_ratio * old_w_ratio,
+            old_y_ratio + y_ratio * old_h_ratio, w_ratio * old_w_ratio,
+            h_ratio * old_h_ratio
+        ]
+        results['crop_quadruple'] = np.array(
+            new_crop_quadruple, dtype=np.float32)
+
+        if 'keypoint' in results:
+            results['keypoint'] = self._crop_kps(results['keypoint'], crop_bbox)
+        if 'imgs' in results:
+            results['imgs'] = self._crop_imgs(results['imgs'], crop_bbox)
+
+        if 'gt_bboxes' in results:
+            results = self._all_box_crop(results, results['crop_bbox'])
+
+        return results
+
+    def __repr__(self):
+        repr_str = (f'{self.__class__.__name__}(crop_size={self.crop_size})')
+        return repr_str
+
+
+@PIPELINES.register_module()
+class ThreeCrop:
+    """Crop images into three crops.
+
+    Crop the images equally into three crops with equal intervals along the
+    shorter side. Required keys are "imgs", "img_shape", added or modified keys
+    are "imgs", "crop_bbox" and "img_shape".
+
+    Args:
+        crop_size(int | tuple[int]): (w, h) of crop size.
+    """
+
+    def __init__(self, crop_size):
+        self.crop_size = _pair(crop_size)
+        if not mmcv.is_tuple_of(self.crop_size, int):
+            raise TypeError(f'Crop_size must be int or tuple of int, '
+                            f'but got {type(crop_size)}')
+
+    def __call__(self, results):
+        """Performs the ThreeCrop augmentation.
+
+        Args:
+            results (dict): The resulting dict to be modified and passed
+                to the next transform in pipeline.
+        """
+        if 'gt_bboxes' in results or 'proposals' in results:
+            warnings.warn('ThreeCrop cannot process bounding boxes')
+
+        imgs = results['imgs']
+        img_h, img_w = results['imgs'][0].shape[:2]
+        crop_w, crop_h = self.crop_size
+        assert crop_h == img_h or crop_w == img_w
+
+        if crop_h == img_h:
+            w_step = (img_w - crop_w) // 2
+            offsets = [
+                (0, 0),  # left
+                (2 * w_step, 0),  # right
+                (w_step, 0),  # middle
+            ]
+        elif crop_w == img_w:
+            h_step = (img_h - crop_h) // 2
+            offsets = [
+                (0, 0),  # top
+                (0, 2 * h_step),  # down
+                (0, h_step),  # middle
+            ]
+
+        cropped = []
+        crop_bboxes = []
+        for x_offset, y_offset in offsets:
+            bbox = [x_offset, y_offset, x_offset + crop_w, y_offset + crop_h]
+            crop = [
+                img[y_offset:y_offset + crop_h, x_offset:x_offset + crop_w]
+                for img in imgs
+            ]
+            cropped.extend(crop)
+            crop_bboxes.extend([bbox for _ in range(len(imgs))])
+
+        crop_bboxes = np.array(crop_bboxes)
+        results['imgs'] = cropped
+        results['crop_bbox'] = crop_bboxes
+        results['img_shape'] = results['imgs'][0].shape[:2]
+
+        return results
+
+    def __repr__(self):
+        repr_str = f'{self.__class__.__name__}(crop_size={self.crop_size})'
+        return repr_str
+
+
+@PIPELINES.register_module()
+class TenCrop:
+    """Crop the images into 10 crops (corner + center + flip).
+
+    Crop the four corners and the center part of the image with the same
+    given crop_size, and flip it horizontally. Required keys are "imgs",
+    "img_shape", added or modified keys are "imgs", "crop_bbox" and "img_shape".
+
+    Args:
+        crop_size(int | tuple[int]): (w, h) of crop size.
+    """
+
+    def __init__(self, crop_size):
+        self.crop_size = _pair(crop_size)
+        if not mmcv.is_tuple_of(self.crop_size, int):
+            raise TypeError(f'Crop_size must be int or tuple of int, '
+                            f'but got {type(crop_size)}')
+
+    def __call__(self, results):
+        """Performs the TenCrop augmentation.
+
+        Args:
+            results (dict): The resulting dict to be modified and passed
+                to the next transform in pipeline.
+        """
+        if 'gt_bboxes' in results or 'proposals' in results:
+            warnings.warn('TenCrop cannot process bounding boxes')
+
+        imgs = results['imgs']
+
+        img_h, img_w = results['imgs'][0].shape[:2]
+        crop_w, crop_h = self.crop_size
+
+        w_step = (img_w - crop_w) // 4
+        h_step = (img_h - crop_h) // 4
+
+        offsets = [
+            (0, 0),  # upper left
+            (4 * w_step, 0),  # upper right
+            (0, 4 * h_step),  # lower left
+            (4 * w_step, 4 * h_step),  # lower right
+            (2 * w_step, 2 * h_step),  # center
+        ]
+
+        img_crops = list()
+        crop_bboxes = list()
+        for x_offset, y_offsets in offsets:
+            crop = [
+                img[y_offsets:y_offsets + crop_h, x_offset:x_offset + crop_w]
+                for img in imgs
+            ]
+            flip_crop = [np.flip(c, axis=1).copy() for c in crop]
+            bbox = [x_offset, y_offsets, x_offset + crop_w, y_offsets + crop_h]
+            img_crops.extend(crop)
+            img_crops.extend(flip_crop)
+            crop_bboxes.extend([bbox for _ in range(len(imgs) * 2)])
+
+        crop_bboxes = np.array(crop_bboxes)
+        results['imgs'] = img_crops
+        results['crop_bbox'] = crop_bboxes
+        results['img_shape'] = results['imgs'][0].shape[:2]
+
+        return results
+
+    def __repr__(self):
+        repr_str = f'{self.__class__.__name__}(crop_size={self.crop_size})'
         return repr_str
