@@ -154,6 +154,7 @@ class MMCompact:
         max_x = np.max(kp_x[kp_x != 0], initial=-np.Inf)
         max_y = np.max(kp_y[kp_y != 0], initial=-np.Inf)
 
+
         # The compact area is too small
         if max_x - min_x < self.threshold or max_y - min_y < self.threshold:
             return (0, 0, w, h)
