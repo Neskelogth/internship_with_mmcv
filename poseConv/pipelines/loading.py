@@ -55,7 +55,7 @@ class DecordInit:
         """
         if 'filename' not in results:
             assert 'frame_dir' in results
-            results['filename'] = results['frame_dir'] + '.mp4'
+            results['filename'] = results['frame_dir'] + '_rgb.avi'
 
         results['video_reader'] = self._get_videoreader(results['filename'])
         if 'total_frames' in results:

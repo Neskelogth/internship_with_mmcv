@@ -2,7 +2,6 @@
 import mmcv
 import numpy as np
 import random
-import torch
 # import warnings
 from collections.abc import Sequence
 from torch.nn.modules.utils import _pair
@@ -63,14 +62,15 @@ class PoseCompact:
         kp = results['keypoint']
 
         # Make NaN zero
-        kp[torch.isnan(kp)] = 0.
+        kp[np.isnan(kp)] = 0.
         kp_x = kp[..., 0]
         kp_y = kp[..., 1]
 
-        min_x = torch.min(kp_x[kp_x != 0])  # , initial=np.Inf)
-        min_y = torch.min(kp_y[kp_y != 0])  # , initial=np.Inf)
-        max_x = torch.max(kp_x[kp_x != 0])  # , initial=-np.Inf)
-        max_y = torch.max(kp_y[kp_y != 0])  # , initial=-np.Inf)
+        min_x = np.min(kp_x[kp_x != 0], initial=np.Inf)
+        min_y = np.min(kp_y[kp_y != 0], initial=np.Inf)
+        max_x = np.max(kp_x[kp_x != 0], initial=-np.Inf)
+        max_y = np.max(kp_y[kp_y != 0], initial=-np.Inf)
+        max_y = np.max(kp_y[kp_y != 0], initial=-np.Inf)
 
         # The compact area is too small
         if max_x - min_x < self.threshold or max_y - min_y < self.threshold:
@@ -446,12 +446,10 @@ class Resize:
         else:
             new_w, new_h = self.scale
 
-        self.scale_factor = torch.from_numpy(np.array([new_w / img_w, new_h / img_h],
-                                                      dtype=np.float32)).to('cuda:0')
-
+        self.scale_factor = np.array([new_w / img_w, new_h / img_h], dtype=np.float32)
         results['img_shape'] = (new_h, new_w)
         results['keep_ratio'] = self.keep_ratio
-        results['scale_factor'] = torch.tensor(results['scale_factor']).to('cuda:0') * self.scale_factor
+        results['scale_factor'] = results['scale_factor'] * self.scale_factor
 
         if 'imgs' in results:
             results['imgs'] = self._resize_imgs(results['imgs'], new_w, new_h)
