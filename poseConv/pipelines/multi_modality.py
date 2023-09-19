@@ -29,8 +29,11 @@ class MMPad:
     def _pad_imgs(self, imgs, old_shape, new_shape):
         diff_y, diff_x = new_shape[0] - old_shape[0], new_shape[1] - old_shape[1]
         return [
-            np.pad(img, ((diff_y // 2, diff_y - diff_y // 2), (diff_x // 2, diff_x - diff_x // 2), (0, 0)),
-                   'constant', constant_values=127) for img in imgs
+            np.pad(
+                img, ((diff_y // 2, diff_y - diff_y // 2),
+                      (diff_x // 2, diff_x - diff_x // 2), (0, 0)),
+                'constant',
+                constant_values=127) for img in imgs
         ]
 
     def __call__(self, results):
@@ -72,7 +75,6 @@ class MMUniformSampleFrames(UniformSampleFrames):
         if not isinstance(results['modality'], list):
             # should override
             results['modality'] = modalities
-
         return results
 
 
@@ -92,7 +94,7 @@ class MMDecode(DecordInit, DecordDecode, PoseDecode):
             frame_inds = results[f'{mod}_inds']
             if mod == 'RGB':
                 if 'filename' not in results:
-                    results['filename'] = results['frame_dir'] + '_rgb.avi'
+                    results['filename'] = results['frame_dir'] + '.mp4'
                 video_reader = self._get_videoreader(results['filename'])
                 imgs = self._decord_load_frames(video_reader, frame_inds)
                 del video_reader
@@ -147,10 +149,11 @@ class MMCompact:
         kp_x = keypoint[..., 0]
         kp_y = keypoint[..., 1]
 
-        min_x = np.min(kp_x[kp_x != 0])
-        min_y = np.min(kp_y[kp_y != 0])
-        max_x = np.max(kp_x[kp_x != 0])
-        max_y = np.max(kp_y[kp_y != 0])
+        min_x = np.min(kp_x[kp_x != 0], initial=np.Inf)
+        min_y = np.min(kp_y[kp_y != 0], initial=np.Inf)
+        max_x = np.max(kp_x[kp_x != 0], initial=-np.Inf)
+        max_y = np.max(kp_y[kp_y != 0], initial=-np.Inf)
+
 
         # The compact area is too small
         if max_x - min_x < self.threshold or max_y - min_y < self.threshold:
