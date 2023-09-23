@@ -15,6 +15,7 @@ class RGBPoseHeadCat(BaseHead):
                  dropout=0.5,
                  loss_cls=None,
                  init_std=0.01,
+                 temporal=False,
                  **kwargs):
 
         if loss_cls is None:
@@ -25,6 +26,7 @@ class RGBPoseHeadCat(BaseHead):
         self.init_std = init_std
         self.dropout_layer = None
         self.pooling_layer = nn.AdaptiveAvgPool3d(1)
+        self.temporal = temporal
 
         if self.dropout != 0:
             self.dropout_layer = nn.Dropout(p=self.dropout)
@@ -36,14 +38,43 @@ class RGBPoseHeadCat(BaseHead):
 
     def forward(self, x):
 
-        x_rgb, x_pose = self.pooling_layer(x[0]), self.pooling_layer(x[1])
+        x_rgb, x_pose = x[0], x[1]
+        print(x_rgb.shape, x_pose.shape)
 
-        x_rgb = x_rgb.view(x_rgb.size(0), -1)
-        x_pose = x_pose.view(x_pose.size(0), -1)
+        if self.temporal:
+            x_rgb = torch.transpose(torch.transpose(x_rgb, 2, 0), 1, 2)
+            x_pose = torch.transpose(torch.transpose(x_pose, 2, 0), 1, 2)
 
-        x = torch.cat(x_pose, x_rgb)
+            assert x_rgb.size[0] == x_pose.size[0], 'The number of frames selected in the RGB stream and the Pose stream should be the same'
+            assert x_rgb.size[1] == x_pose.size[1], 'The number of people in the frames selected in the RGB stream and the Pose stream should be the same'
 
-        assert x.shape[1] == self.in_channels
+            x = None
+
+            for frame in x_pose:
+                frame_features = None
+                for person in frame:
+                    person_features = torch.cat((x_pose[frame, person], x_rgb[frame, person]))
+                    if frame_features is None:
+                        frame_features = person_features
+                    else:
+                        frame_features = torch.cat((frame_features, person_features))
+                if x is None:
+                    x = frame_features
+                else:
+                    x = torch.cat((x, frame_features))
+
+            assert x is not None, 'The features cannot be None'
+            x = torch.transpose(torch.transpose(x, 2, 0), 1, 2)
+            x = self.pooling_layer(x)
+            x = x.view(x.size(0), -1)
+
+        else:
+            x_rgb, x_pose = self.pooling_layer(x[0]), self.pooling_layer(x[1])
+            x_rgb = x_rgb.view(x_rgb.size(0), -1)
+            x_pose = x_pose.view(x_pose.size(0), -1)
+            x = torch.cat((x_pose, x_rgb))
+
+        assert x.shape[1] == self.in_channels, f'The number of channels should be {self.in_channels}, found {x.shape[1]}'
 
         if self.dropout_layer is not None:
             x = self.dropout_layer(x)

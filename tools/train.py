@@ -65,6 +65,7 @@ def main():
     cfg = Config.fromfile(args.config)
 
     torch.multiprocessing.set_start_method('spawn')
+    torch.cuda.empty_cache()
 
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):

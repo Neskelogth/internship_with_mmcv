@@ -39,8 +39,6 @@ class RGBPoseHeadSum(BaseHead):
 
         x_rgb, x_pose = self.pooling_layer(x[0]), self.pooling_layer(x[1])
 
-        assert x_rgb.shape == x_pose.shape, 'The dimension of the rgb features and the pose features should be the same'
-
         x_rgb = x_rgb.view(x_rgb.size(0), -1)
         x_pose = x_pose.view(x_pose.size(0), -1)
 
