@@ -90,7 +90,6 @@ test_pipeline = [
 data = dict(
     videos_per_gpu=1,
     workers_per_gpu=1,
-    shuffle=False,
     val_dataloader=dict(videos_per_gpu=1),
     test_dataloader=dict(videos_per_gpu=1),
     train=dict(type=dataset_type, ann_file=ann_file, split='xsub_train', data_prefix=data_root, pipeline=train_pipeline),
