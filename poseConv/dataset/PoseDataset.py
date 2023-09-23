@@ -168,6 +168,7 @@ class PoseDataset(BaseDataset):
             if 'train' not in self.split:
                 data = data[:4000]
             else:
+                data = [item for item in data if item['frame_dir'] == 'S006C001P019R001A022']
                 data = data[:10000]
 
         for item in data:

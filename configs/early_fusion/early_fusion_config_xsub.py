@@ -15,8 +15,8 @@ model = dict(
 
 
 dataset_type = 'PoseDataset'
-data_root = '../data/nturgbd_videos/'
-ann_file = '../data/nturgbd/ntu60_hrnet.pkl'
+data_root = '../datasets/nturgbd/nturgb+d_rgb/'
+ann_file = './data/nturgbd/ntu60_hrnet.pkl'
 left_kp = [1, 3, 5, 7, 9, 11, 13, 15]
 right_kp = [2, 4, 6, 8, 10, 12, 14, 16]
 img_norm_cfg = dict(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_bgr=False)

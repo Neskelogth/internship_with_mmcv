@@ -31,7 +31,7 @@ class DecordInit:
 
     def _get_videoreader(self, filename):
         if osp.splitext(filename)[0] == filename:
-            filename = filename + '.mp4'
+            filename = filename + '_rgb.avi'
         try:
             import decord
         except ImportError:

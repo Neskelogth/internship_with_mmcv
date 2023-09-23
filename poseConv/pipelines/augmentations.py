@@ -349,7 +349,7 @@ class RandomResizedCrop(RandomCrop):
         results['img_shape'] = (new_h, new_w)
 
         if 'keypoint' in results:
-            results['keypoint'] = self._crop_kps(results['keypoint'].cpu()  , crop_bbox)
+            results['keypoint'] = self._crop_kps(results['keypoint'], crop_bbox)
         if 'imgs' in results:
             results['imgs'] = self._crop_imgs(results['imgs'], crop_bbox)
 
@@ -454,7 +454,7 @@ class Resize:
         if 'imgs' in results:
             results['imgs'] = self._resize_imgs(results['imgs'], new_w, new_h)
         if 'keypoint' in results:
-            results['keypoint'] = self._resize_kps(results['keypoint'].to('cuda:0'), self.scale_factor)
+            results['keypoint'] = self._resize_kps(results['keypoint'], self.scale_factor)
 
         if 'gt_bboxes' in results:
             results['gt_bboxes'] = self._box_resize(results['gt_bboxes'], self.scale_factor)
