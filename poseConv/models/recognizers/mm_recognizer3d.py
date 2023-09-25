@@ -22,6 +22,9 @@ class MMRecognizer3D(BaseRecognizer):
         # Which will return 3 cls_scores: ['rgb', 'pose', 'both']
         cls_scores = self.cls_head((x_rgb, x_pose))
 
+        if type(cls_scores) != dict:
+            cls_scores = {'total': cls_scores}
+
         gt_labels = labels.squeeze()
         loss_components = self.cls_head.loss_components
         loss_weights = self.cls_head.loss_weights
@@ -43,6 +46,9 @@ class MMRecognizer3D(BaseRecognizer):
         x_rgb, x_pose = self.backbone(imgs, heatmap_imgs)
         cls_scores = self.cls_head((x_rgb, x_pose))
 
+        if type(cls_scores) != dict:
+            cls_scores = {'total': cls_scores}
+        
         for k in cls_scores:
             cls_score = self.average_clip(cls_scores[k][None])
             cls_scores[k] = cls_score.data.cpu().numpy()[0]

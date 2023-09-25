@@ -27,6 +27,8 @@ class RGBPoseHeadCat(BaseHead):
         self.dropout_layer = None
         self.pooling_layer = nn.AdaptiveAvgPool3d(1)
         self.temporal = temporal
+        self.loss_weights = [1.]
+        self.loss_components = ['total']
 
         if self.dropout != 0:
             self.dropout_layer = nn.Dropout(p=self.dropout)
@@ -39,7 +41,6 @@ class RGBPoseHeadCat(BaseHead):
     def forward(self, x):
 
         x_rgb, x_pose = x[0], x[1]
-        print(x_rgb.shape, x_pose.shape)
 
         if self.temporal:
             x_rgb = torch.transpose(torch.transpose(x_rgb, 2, 0), 1, 2)
@@ -57,11 +58,11 @@ class RGBPoseHeadCat(BaseHead):
                     if frame_features is None:
                         frame_features = person_features
                     else:
-                        frame_features = torch.cat((frame_features, person_features))
+                        frame_features = torch.cat((frame_features, person_features), dim=-1)
                 if x is None:
                     x = frame_features
                 else:
-                    x = torch.cat((x, frame_features))
+                    x = torch.cat((x, frame_features), dim=-1)
 
             assert x is not None, 'The features cannot be None'
             x = torch.transpose(torch.transpose(x, 2, 0), 1, 2)
@@ -72,9 +73,10 @@ class RGBPoseHeadCat(BaseHead):
             x_rgb, x_pose = self.pooling_layer(x[0]), self.pooling_layer(x[1])
             x_rgb = x_rgb.view(x_rgb.size(0), -1)
             x_pose = x_pose.view(x_pose.size(0), -1)
-            x = torch.cat((x_pose, x_rgb))
+            x = torch.cat((x_pose, x_rgb), dim=-1)
 
-        assert x.shape[1] == self.in_channels, f'The number of channels should be {self.in_channels}, found {x.shape[1]}'
+        assert x.shape[1] == self.in_channels, (f'The number of channels should be '
+                                                f'{self.in_channels}, found {x.shape[1]}')
 
         if self.dropout_layer is not None:
             x = self.dropout_layer(x)
