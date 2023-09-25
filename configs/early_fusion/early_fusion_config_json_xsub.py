@@ -13,9 +13,10 @@ model = dict(
         dropout=0.5),
     test_cfg=dict(average_clips='prob'))
 
+
 dataset_type = 'PoseDataset'
 data_root = '../../datasets/nturgbd/nturgb+d_rgb/'
-ann_file = '../json_outputs_openpose/'
+ann_file = './data/nturgbd/ntu60_hrnet.pkl'
 left_kp = [1, 3, 5, 7, 9, 11, 13, 15]
 right_kp = [2, 4, 6, 8, 10, 12, 14, 16]
 img_norm_cfg = dict(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_bgr=False)
@@ -61,25 +62,25 @@ test_pipeline = [
 ]
 
 data = dict(
-    videos_per_gpu=4,
-    workers_per_gpu=4,
-    val_dataloader=dict(videos_per_gpu=4),
-    test_dataloader=dict(videos_per_gpu=4),
+    videos_per_gpu=2,
+    workers_per_gpu=2,
+    val_dataloader=dict(videos_per_gpu=1, workers_per_gpu=8),
+    test_dataloader=dict(videos_per_gpu=1, workers_per_gpu=8),
     train=dict(type=dataset_type, ann_file=ann_file, split='xsub_train', data_prefix=data_root,
                pipeline=train_pipeline, origin='json'),
-    val=dict(type=dataset_type, ann_file=ann_file, split='xsub_val', data_prefix=data_root, pipeline=val_pipeline,
-             origin='json'),
-    test=dict(type=dataset_type, ann_file=ann_file, split='xsub_val', data_prefix=data_root, pipeline=test_pipeline,
-              origin='json'))
+    val=dict(type=dataset_type, ann_file=ann_file, split='xsub_val', data_prefix=data_root,
+             pipeline=val_pipeline, origin='json'),
+    test=dict(type=dataset_type, ann_file=ann_file, split='xsub_val', data_prefix=data_root,
+              pipeline=test_pipeline, origin='json'))
 
-optimizer = dict(type='Adam', lr=1e-4)
+optimizer = dict(type='Adam', lr=1e-3)
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
 lr_config = dict(policy='CosineAnnealing', by_epoch=False, min_lr=0)
-total_epochs = 24
+total_epochs = 25
 checkpoint_config = dict(interval=1)
 workflow = [('train', 1)]
 evaluation = dict(interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'], topk=(1, 5))
 log_config = dict(interval=20, hooks=[dict(type='TextLoggerHook')])
 log_level = 'INFO'
-work_dir = './work_dirs/early_fusion/openpose/xsub'
+work_dir = './work_dirs/early_fusion/hrnet/xsub/'
