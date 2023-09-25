@@ -62,10 +62,10 @@ test_pipeline = [
 ]
 
 data = dict(
-    videos_per_gpu=2,
-    workers_per_gpu=2,
-    val_dataloader=dict(videos_per_gpu=4),
-    test_dataloader=dict(videos_per_gpu=4),
+    videos_per_gpu=4,
+    workers_per_gpu=1,
+    val_dataloader=dict(videos_per_gpu=1, workers_per_gpu=8),
+    test_dataloader=dict(videos_per_gpu=1, workers_per_gpu=8),
     train=dict(type=dataset_type, ann_file=ann_file, split='xsub_train', data_prefix=data_root,
                pipeline=train_pipeline),
     val=dict(type=dataset_type, ann_file=ann_file, split='xsub_val', data_prefix=data_root, pipeline=val_pipeline),

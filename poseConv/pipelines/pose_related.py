@@ -38,10 +38,10 @@ class PoseDecode:
         frame_inds = results['frame_inds'] + offset
 
         if 'keypoint_score' in results:
-            results['keypoint_score'] = self._load_kpscore(results['keypoint_score'], frame_inds).to(DEVICE)
+            results['keypoint_score'] = self._load_kpscore(results['keypoint_score'], frame_inds)
 
         if 'keypoint' in results:
-            results['keypoint'] = self._load_kp(results['keypoint'], frame_inds).to(DEVICE)
+            results['keypoint'] = self._load_kp(results['keypoint'], frame_inds)
 
         return results
 

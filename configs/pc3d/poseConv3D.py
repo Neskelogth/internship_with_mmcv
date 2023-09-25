@@ -14,7 +14,7 @@ model = dict(
     test_cfg=dict(average_clips='prob'))
 
 dataset_type = 'PoseDataset'
-ann_file = './data/nturgbd/ntu60_hrnet.pkl'
+ann_file = '../data/nturgbd/ntu60_hrnet.pkl'
 left_kp = [1, 3, 5, 7, 9, 11, 13, 15]
 right_kp = [2, 4, 6, 8, 10, 12, 14, 16]
 train_pipeline = [  # 37646 for xview, 40091 for xsub
@@ -53,7 +53,7 @@ test_pipeline = [  # 16487 elements for xsub, 18932 for xview
 data = dict(
     videos_per_gpu=2,  # batch size
     workers_per_gpu=1,  # num workers
-    test_dataloader=dict(videos_per_gpu=2, workers_per_gpu=2),
+    test_dataloader=dict(videos_per_gpu=1, workers_per_gpu=8),
     train=dict(type=dataset_type, ann_file=ann_file, split='xsub_train', pipeline=train_pipeline),
     val=dict(type=dataset_type, ann_file=ann_file, split='xsub_val', pipeline=val_pipeline),
     test=dict(type=dataset_type, ann_file=ann_file, split='xsub_val', pipeline=test_pipeline))

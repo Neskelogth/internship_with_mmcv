@@ -1,4 +1,4 @@
-from .augmentations import *
+from .augmentations import PoseCompact, RandomCrop, RandomResizedCrop, Resize, Flip, Normalize, CenterCrop, ThreeCrop, TenCrop
 from .compose import *
 from .formatting import *
 from .heatmap_related import *
