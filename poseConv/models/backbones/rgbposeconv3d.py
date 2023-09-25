@@ -35,11 +35,11 @@ class RGBPoseConv3D(nn.Module):
                     lateral=True,
                     lateral_infl=1,
                     lateral_activate=(0, 0, 1, 1),
-                    base_channels=64,
+                    base_channels=32,
                     conv1_kernel=(1, 7, 7),
                     inflate=(0, 0, 1, 1)),
                  pose_pathway=dict(
-                    num_stages=3,
+                    num_stages=4,
                     stage_blocks=(4, 6, 3),
                     lateral=True,
                     lateral_inv=True,
@@ -166,6 +166,8 @@ class RGBPoseConv3D(nn.Module):
 
         x_rgb = self.rgb_path.layer4(x_rgb)
         x_pose = self.pose_path.layer3(x_pose)
+        if self.pose_path.num_stages == 4:
+            x_pose = self.pose_path.layer4(x_pose)
 
         return (x_rgb, x_pose)
 

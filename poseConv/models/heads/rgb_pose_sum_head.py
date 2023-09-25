@@ -15,6 +15,8 @@ class RGBPoseHeadSum(BaseHead):
                  dropout=0.5,
                  loss_cls=None,
                  init_std=0.01,
+                 learnable_weight=False,
+                 encoder_layer=False,
                  **kwargs):
 
         if loss_cls is None:
@@ -26,6 +28,16 @@ class RGBPoseHeadSum(BaseHead):
         self.init_std = init_std
         self.dropout_layer = None
         self.pooling_layer = nn.AdaptiveAvgPool3d(1)
+        self.weight = None
+        self.enc_layer = None
+
+        assert not (learnable_weight and encoder_layer), 'At most one of attention and encoder can be true at once'
+
+        if learnable_weight:
+            self.weight = nn.Parameter(torch.randn(1))
+
+        if encoder_layer:
+            self.enc_layer = nn.TransformerEncoderLayer(d_model=in_channels, nhead=8)
 
         if self.dropout != 0:
             self.dropout_layer = nn.Dropout(p=self.dropout)
@@ -42,9 +54,15 @@ class RGBPoseHeadSum(BaseHead):
         x_rgb = x_rgb.view(x_rgb.size(0), -1)
         x_pose = x_pose.view(x_pose.size(0), -1)
 
-        x = torch.add(x_pose, x_rgb)
+        if self.weight is not None:
+            x = self.weight * x_pose + (1 - self.weight) * x_rgb
+        else:
+            if self.enc_layer is not None:
+                x_pose = self.enc_layer(x_pose)
+                x_rgb = self.enc_layer(x_rgb)
+            x = x_pose + x_rgb
 
-        assert x.shape[1] == self.in_channels
+        assert x.shape[1] == self.fc_layer.in_features
 
         if self.dropout_layer is not None:
             x = self.dropout_layer(x)
