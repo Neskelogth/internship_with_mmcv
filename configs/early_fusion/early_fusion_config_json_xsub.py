@@ -21,12 +21,12 @@ right_kp = [2, 4, 6, 8, 10, 12, 14, 16]
 img_norm_cfg = dict(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_bgr=False)
 
 train_pipeline = [
-    dict(type='MMUniformSampleFrames', clip_len=dict(RGB=32, Pose=32), num_clips=1),
+    dict(type='MMUniformSampleFrames', clip_len=dict(RGB=8, Pose=8), num_clips=1),
     dict(type='MMDecode'),
     dict(type='MMCompact', hw_ratio=1., allow_imgpad=True),
-    dict(type='Resize', scale=(256, 256), keep_ratio=False),
+    dict(type='Resize', scale=(128, 128), keep_ratio=False),
     dict(type='RandomResizedCrop', area_range=(0.56, 1.0)),
-    dict(type='Resize', scale=(224, 224), keep_ratio=False),
+    dict(type='Resize', scale=(112, 112), keep_ratio=False),
     dict(type='Flip', flip_ratio=0.5, left_kp=left_kp, right_kp=right_kp),
     dict(type='GeneratePoseTarget', sigma=0.7, use_score=True, with_kp=True, with_limb=False),
     dict(type='Normalize', **img_norm_cfg),
@@ -36,10 +36,10 @@ train_pipeline = [
     dict(type='ToTensor', keys=['imgs', 'label'])
 ]
 val_pipeline = [
-    dict(type='MMUniformSampleFrames', clip_len=dict(RGB=32, Pose=32), num_clips=1),
+    dict(type='MMUniformSampleFrames', clip_len=dict(RGB=8, Pose=8), num_clips=1),
     dict(type='MMDecode'),
     dict(type='MMCompact', hw_ratio=1., allow_imgpad=True),
-    dict(type='Resize', scale=(256, 256), keep_ratio=False),
+    dict(type='Resize', scale=(128, 128), keep_ratio=False),
     dict(type='GeneratePoseTarget', sigma=0.7, use_score=True, with_kp=True, with_limb=False),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='FormatShape', input_format='NCTHW'),
@@ -48,10 +48,10 @@ val_pipeline = [
     dict(type='ToTensor', keys=['imgs', 'label'])
 ]
 test_pipeline = [
-    dict(type='MMUniformSampleFrames', clip_len=dict(RGB=32, Pose=32), num_clips=1),
+    dict(type='MMUniformSampleFrames', clip_len=dict(RGB=8, Pose=8), num_clips=1),
     dict(type='MMDecode'),
     dict(type='MMCompact', hw_ratio=1., allow_imgpad=True),
-    dict(type='Resize', scale=(256, 256), keep_ratio=False),
+    dict(type='Resize', scale=(128, 128), keep_ratio=False),
     dict(type='GeneratePoseTarget', sigma=0.7, use_score=True, with_kp=True, with_limb=False),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='FormatShape', input_format='NCTHW'),

@@ -41,7 +41,6 @@ class RGBPoseHeadCat(BaseHead):
     def forward(self, x):
 
         x_rgb, x_pose = x[0], x[1]
-        # print(x_rgb.shape, x_pose.shape)
 
         if self.temporal:
             x_rgb = torch.transpose(torch.transpose(x_rgb, 2, 0), 1, 2)
@@ -76,7 +75,8 @@ class RGBPoseHeadCat(BaseHead):
             x_pose = x_pose.view(x_pose.size(0), -1)
             x = torch.cat((x_pose, x_rgb), dim=-1)
 
-        assert x.shape[1] == self.in_channels, f'The number of channels should be {self.in_channels}, found {x.shape[1]}'
+        assert x.shape[1] == self.in_channels, (f'The number of channels should be '
+                                                f'{self.in_channels}, found {x.shape[1]}')
 
         if self.dropout_layer is not None:
             x = self.dropout_layer(x)
