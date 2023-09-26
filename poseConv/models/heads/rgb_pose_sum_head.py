@@ -31,6 +31,9 @@ class RGBPoseHeadSum(BaseHead):
         self.weight = None
         self.enc_layer = None
 
+        self.loss_weights = [1.]
+        self.loss_components = ['total']
+
         assert not (learnable_weight and encoder_layer), 'At most one of attention and encoder can be true at once'
 
         if learnable_weight:
