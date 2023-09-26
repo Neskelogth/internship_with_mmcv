@@ -28,9 +28,9 @@ backbone_cfg = dict(
         pool1_stride=(1, 1),
         inflate=(0, 0, 1, 1)))
 head_cfg = dict(
-    type='RGBPoseHeadCat',
+    type='RGBPoseHeadSum',
     num_classes=60,
-    in_channels=2048)
+    in_channels=1024)
 test_cfg = dict(average_clips='prob')
 model = dict(
     type='MMRecognizer3D',
@@ -87,12 +87,13 @@ data = dict(
     workers_per_gpu=2,
     val_dataloader=dict(videos_per_gpu=1, workers_per_gpu=8),
     test_dataloader=dict(videos_per_gpu=1, workers_per_gpu=8),
-    train=dict(type=dataset_type, ann_file=ann_file, split='xview_train', data_prefix=data_root,
+    train=dict(type=dataset_type, ann_file=ann_file, split='xsub_train', data_prefix=data_root,
                pipeline=train_pipeline, origin='json'),
-    val=dict(type=dataset_type, ann_file=ann_file, split='xview_val', data_prefix=data_root,
+    val=dict(type=dataset_type, ann_file=ann_file, split='xsub_val', data_prefix=data_root,
              pipeline=val_pipeline, origin='json'),
-    test=dict(type=dataset_type, ann_file=ann_file, split='xview_val', data_prefix=data_root,
+    test=dict(type=dataset_type, ann_file=ann_file, split='xsub_val', data_prefix=data_root,
               pipeline=test_pipeline, origin='json'))
+
 # optimizer
 optimizer = dict(type='Adam', lr=1e-3, fused=True)
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
@@ -104,6 +105,6 @@ workflow = [('train', 1)]
 evaluation = dict(interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'], topk=(1, 5),
                   key_indicator='RGBPose_1:1_top1_acc')
 log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook')])
-work_dir = './work_dirs/late_only/late_only_cat/openpose/xview'
+work_dir = './work_dirs/late_only/late_only_weighted_sum/openpose/xsub'
 # load_from = 'https://download.openmmlab.com/mmaction/pyskl/ckpt/rgbpose_conv3d/rgbpose_conv3d_init.pth'
 auto_resume = False

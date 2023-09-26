@@ -28,7 +28,8 @@ class RGBPoseHeadSum(BaseHead):
         self.init_std = init_std
         self.dropout_layer = None
         self.pooling_layer = nn.AdaptiveAvgPool3d(1)
-        self.weight = None
+        self.pose_weight = None
+        self.rgb_weight = None
         self.enc_layer = None
 
         self.loss_weights = [1.]
@@ -37,7 +38,8 @@ class RGBPoseHeadSum(BaseHead):
         assert not (learnable_weight and encoder_layer), 'At most one of attention and encoder can be true at once'
 
         if learnable_weight:
-            self.weight = nn.Parameter(torch.randn(1))
+            self.pose_weight = nn.Parameter(torch.randn(1))
+            self.rgb_weight = nn.Parameter(torch.randn(1))
 
         if encoder_layer:
             self.enc_layer = nn.TransformerEncoderLayer(d_model=in_channels, nhead=8)
@@ -58,7 +60,7 @@ class RGBPoseHeadSum(BaseHead):
         x_pose = x_pose.view(x_pose.size(0), -1)
 
         if self.weight is not None:
-            x = self.weight * x_pose + (1 - self.weight) * x_rgb
+            x = self.pose_weight * x_pose + self.rgb_weight * x_rgb
         else:
             if self.enc_layer is not None:
                 x_pose = self.enc_layer(x_pose)
