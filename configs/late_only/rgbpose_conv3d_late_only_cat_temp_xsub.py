@@ -103,5 +103,6 @@ workflow = [('train', 1)]
 evaluation = dict(interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'], topk=(1, 5),
                   key_indicator='RGBPose_1:1_top1_acc')
 log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook')])
-work_dir = './work_dirs/late_only/late_only_cat/hrnet/xsub'
-load_from = 'https://download.openmmlab.com/mmaction/pyskl/ckpt/rgbpose_conv3d/rgbpose_conv3d_init.pth'
+work_dir = './work_dirs/late_only/late_only_cat_temp/hrnet/xsub'
+# load_from = 'https://download.openmmlab.com/mmaction/pyskl/ckpt/rgbpose_conv3d/rgbpose_conv3d_init.pth'
+auto_resume = False

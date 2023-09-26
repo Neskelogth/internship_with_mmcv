@@ -14,7 +14,7 @@ model = dict(
     test_cfg=dict(average_clips='prob'))
 
 dataset_type = 'PoseDataset'
-ann_file = '../../json_openpose_outputs/json_outputs_openpose'
+ann_file = '../json_outputs_openpose'
 left_kp = [1, 3, 5, 7, 9, 11, 13, 15]
 right_kp = [2, 4, 6, 8, 10, 12, 14, 16]
 

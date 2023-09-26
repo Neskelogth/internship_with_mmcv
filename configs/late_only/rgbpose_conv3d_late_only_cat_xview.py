@@ -102,4 +102,5 @@ evaluation = dict(interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'],
                   key_indicator='RGBPose_1:1_top1_acc')
 log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook')])
 work_dir = './work_dirs/late_only/late_only_cat/hrnet/xview'
-load_from = 'https://download.openmmlab.com/mmaction/pyskl/ckpt/rgbpose_conv3d/rgbpose_conv3d_init.pth'
+# load_from = 'https://download.openmmlab.com/mmaction/pyskl/ckpt/rgbpose_conv3d/rgbpose_conv3d_init.pth'
+auto_resume = False

@@ -46,8 +46,10 @@ class RGBPoseHeadCat(BaseHead):
             x_rgb = torch.transpose(torch.transpose(x_rgb, 2, 0), 1, 2)
             x_pose = torch.transpose(torch.transpose(x_pose, 2, 0), 1, 2)
 
-            assert x_rgb.size[0] == x_pose.size[0], 'The number of frames selected in the RGB stream and the Pose stream should be the same'
-            assert x_rgb.size[1] == x_pose.size[1], 'The number of people in the frames selected in the RGB stream and the Pose stream should be the same'
+            assert x_rgb.size()[0] == x_pose.size()[0], ('The number of frames selected in the RGB stream and '
+                                                         'the Pose stream should be the same')
+            assert x_rgb.size()[1] == x_pose.size()[1], ('The number of people in the frames selected in the RGB '
+                                                         'stream and the Pose stream should be the same')
 
             x = None
 
@@ -55,17 +57,19 @@ class RGBPoseHeadCat(BaseHead):
                 frame_features = None
                 for person in frame:
                     person_features = torch.cat((x_pose[frame, person], x_rgb[frame, person]))
+                    person_features = person_features.view((1, ) + person_features.shape)
                     if frame_features is None:
                         frame_features = person_features
                     else:
-                        frame_features = torch.cat((frame_features, person_features), dim=-1)
+                        frame_features = torch.cat((frame_features, person_features))
+                frame_features = frame_features.view((1, ) + frame_features.shape)
                 if x is None:
                     x = frame_features
                 else:
-                    x = torch.cat((x, frame_features), dim=-1)
+                    x = torch.cat((x, frame_features))
 
             assert x is not None, 'The features cannot be None'
-            x = torch.transpose(torch.transpose(x, 2, 0), 1, 2)
+            x = torch.transpose(torch.transpose(x, 2, 0), 1, 0)
             x = self.pooling_layer(x)
             x = x.view(x.size(0), -1)
 
