@@ -29,7 +29,8 @@ backbone_cfg = dict(
 head_cfg = dict(
     type='RGBPoseHeadSum',
     num_classes=60,
-    in_channels=1024)
+    in_channels=1024,
+    learnable_weight=True)
 test_cfg = dict(average_clips='prob')
 model = dict(
     type='MMRecognizer3D',
