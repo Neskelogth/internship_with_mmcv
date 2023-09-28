@@ -1,4 +1,3 @@
-# model_cfg
 backbone_cfg = dict(
     type='RGBPoseConv3D',
     speed_ratio=4,
