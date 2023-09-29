@@ -1,8 +1,8 @@
 # model_cfg
 backbone_cfg = dict(
     type='RGBPoseConv3D',
-    speed_ratio=4,
-    channel_ratio=4,
+    speed_ratio=1,
+    channel_ratio=1,
     rgb_pathway=dict(
         num_stages=4,
         lateral=True,
@@ -18,8 +18,8 @@ backbone_cfg = dict(
         num_stages=4,
         lateral=True,
         lateral_inv=True,
-        lateral_infl=16,
-        lateral_activate=(0, 1, 1),
+        lateral_infl=1,
+        lateral_activate=(0, 0, 1, 1),
         in_channels=17,
         base_channels=32,
         out_indices=(2, ),
@@ -41,7 +41,7 @@ model = dict(
 
 dataset_type = 'PoseDataset'
 data_root = '../../datasets/nturgbd/nturgb+d_rgb/'
-ann_file = './data/nturgbd/ntu60_hrnet.pkl'
+ann_file = '../json_outputs_openpose/'
 left_kp = [1, 3, 5, 7, 9, 11, 13, 15]
 right_kp = [2, 4, 6, 8, 10, 12, 14, 16]
 img_norm_cfg = dict(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_bgr=False)
@@ -96,7 +96,7 @@ data = dict(
               pipeline=test_pipeline, origin='json'))
 
 # optimizer
-optimizer = dict(type='Adam', lr=1e-5, fused=True)
+optimizer = dict(type='Adam', lr=1e-3, fused=True)
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
 lr_config = dict(policy='CosineAnnealing', by_epoch=False, min_lr=0)
@@ -107,5 +107,3 @@ evaluation = dict(interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'],
                   key_indicator='RGBPose_1:1_top1_acc')
 log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook')])
 work_dir = './work_dirs/late_only/lateral_late_weighted_sum/openpose/xsub'
-# load_from = 'https://download.openmmlab.com/mmaction/pyskl/ckpt/rgbpose_conv3d/rgbpose_conv3d_init.pth'
-auto_resume = False

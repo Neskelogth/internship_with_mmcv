@@ -1,3 +1,4 @@
+import time
 import torch
 import torch.nn as nn
 from mmcv.cnn import constant_init, kaiming_init
@@ -114,6 +115,7 @@ class RGBPoseConv3D(nn.Module):
             pose_drop_path = torch.rand(1) < self.pose_drop_path
         else:
             rgb_drop_path, pose_drop_path = False, False
+
         # We assume base_channel for RGB and Pose are 64 and 32.
         x_rgb = self.rgb_path.conv1(imgs)
         x_rgb = self.rgb_path.maxpool(x_rgb)
@@ -124,31 +126,11 @@ class RGBPoseConv3D(nn.Module):
         x_rgb = self.rgb_path.layer1(x_rgb)
         x_rgb = self.rgb_path.layer2(x_rgb)
         x_pose = self.pose_path.layer1(x_pose)
+        x_pose = self.pose_path.layer2(x_pose)
 
         if hasattr(self.rgb_path, 'layer2_lateral'):
             feat = x_pose.detach() if self.rgb_detach else x_pose
             x_pose_lateral = self.rgb_path.layer2_lateral(feat)
-            if rgb_drop_path:
-                x_pose_lateral = x_pose_lateral.new_zeros(x_pose_lateral.shape)
-
-        if hasattr(self.pose_path, 'layer1_lateral'):
-            feat = x_rgb.detach() if self.pose_detach else x_rgb
-            x_rgb_lateral = self.pose_path.layer1_lateral(feat)
-            if pose_drop_path:
-                x_rgb_lateral = x_rgb_lateral.new_zeros(x_rgb_lateral.shape)
-
-        if hasattr(self.rgb_path, 'layer2_lateral'):
-            x_rgb = torch.cat((x_rgb, x_pose_lateral), dim=1)
-
-        if hasattr(self.pose_path, 'layer1_lateral'):
-            x_pose = torch.cat((x_pose, x_rgb_lateral), dim=1)
-
-        x_rgb = self.rgb_path.layer3(x_rgb)
-        x_pose = self.pose_path.layer2(x_pose)
-
-        if hasattr(self.rgb_path, 'layer3_lateral'):
-            feat = x_pose.detach() if self.rgb_detach else x_pose
-            x_pose_lateral = self.rgb_path.layer3_lateral(feat)
             if rgb_drop_path:
                 x_pose_lateral = x_pose_lateral.new_zeros(x_pose_lateral.shape)
 
@@ -158,14 +140,34 @@ class RGBPoseConv3D(nn.Module):
             if pose_drop_path:
                 x_rgb_lateral = x_rgb_lateral.new_zeros(x_rgb_lateral.shape)
 
-        if hasattr(self.rgb_path, 'layer3_lateral'):
+        if hasattr(self.rgb_path, 'layer2_lateral'):
             x_rgb = torch.cat((x_rgb, x_pose_lateral), dim=1)
 
         if hasattr(self.pose_path, 'layer2_lateral'):
             x_pose = torch.cat((x_pose, x_rgb_lateral), dim=1)
 
-        x_rgb = self.rgb_path.layer4(x_rgb)
+        x_rgb = self.rgb_path.layer3(x_rgb)
         x_pose = self.pose_path.layer3(x_pose)
+
+        if hasattr(self.rgb_path, 'layer3_lateral'):
+            feat = x_pose.detach() if self.rgb_detach else x_pose
+            x_pose_lateral = self.rgb_path.layer3_lateral(feat)
+            if rgb_drop_path:
+                x_pose_lateral = x_pose_lateral.new_zeros(x_pose_lateral.shape)
+
+        if hasattr(self.pose_path, 'layer3_lateral'):
+            feat = x_rgb.detach() if self.pose_detach else x_rgb
+            x_rgb_lateral = self.pose_path.layer3_lateral(feat)
+            if pose_drop_path:
+                x_rgb_lateral = x_rgb_lateral.new_zeros(x_rgb_lateral.shape)
+
+        if hasattr(self.rgb_path, 'layer3_lateral'):
+            x_rgb = torch.cat((x_rgb, x_pose_lateral), dim=1)
+
+        if hasattr(self.pose_path, 'layer3_lateral'):
+            x_pose = torch.cat((x_pose, x_rgb_lateral), dim=1)
+
+        x_rgb = self.rgb_path.layer4(x_rgb)
         if self.pose_path.num_stages == 4:
             x_pose = self.pose_path.layer4(x_pose)
 

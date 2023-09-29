@@ -53,9 +53,12 @@ class RGBPoseHeadCat(BaseHead):
 
             x = None
 
-            for frame in x_pose:
+            frame_number = len(x_pose)
+            people_number = len(x_pose[0])
+
+            for frame in range(frame_number):
                 frame_features = None
-                for person in frame:
+                for person in range(people_number):
                     person_features = torch.cat((x_pose[frame, person], x_rgb[frame, person]))
                     person_features = person_features.view((1, ) + person_features.shape)
                     if frame_features is None:

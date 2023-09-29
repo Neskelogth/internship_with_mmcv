@@ -1,8 +1,8 @@
 # model_cfg
 backbone_cfg = dict(
     type='RGBPoseConv3D',
-    speed_ratio=4,
-    channel_ratio=4,
+    speed_ratio=1,
+    channel_ratio=1,
     rgb_pathway=dict(
         num_stages=4,
         lateral=False,
@@ -18,8 +18,8 @@ backbone_cfg = dict(
         num_stages=4,
         lateral=False,
         lateral_inv=False,
-        lateral_infl=16,
-        lateral_activate=(0, 1, 1),
+        lateral_infl=1,
+        lateral_activate=(0, 0, 1, 1),
         in_channels=17,
         base_channels=32,
         out_indices=(2, ),

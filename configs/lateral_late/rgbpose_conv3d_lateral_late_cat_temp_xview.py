@@ -1,8 +1,8 @@
 # model_cfg
 backbone_cfg = dict(
     type='RGBPoseConv3D',
-    speed_ratio=4,
-    channel_ratio=4,
+    speed_ratio=1,
+    channel_ratio=1,
     rgb_pathway=dict(
         num_stages=4,
         lateral=True,
@@ -18,8 +18,8 @@ backbone_cfg = dict(
         num_stages=4,
         lateral=True,
         lateral_inv=True,
-        lateral_infl=16,
-        lateral_activate=(0, 1, 1),
+        lateral_infl=1,
+        lateral_activate=(0, 0, 1, 1),
         in_channels=17,
         base_channels=32,
         out_indices=(2, ),
@@ -92,7 +92,7 @@ data = dict(
     val=dict(type=dataset_type, ann_file=ann_file, split='xview_val', data_prefix=data_root, pipeline=val_pipeline),
     test=dict(type=dataset_type, ann_file=ann_file, split='xview_val', data_prefix=data_root, pipeline=test_pipeline))
 # optimizer
-optimizer = dict(type='Adam', lr=1e-5, fused=True)
+optimizer = dict(type='Adam', lr=1e-3, fused=True)
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
 lr_config = dict(policy='CosineAnnealing', by_epoch=False, min_lr=0)
@@ -103,5 +103,3 @@ evaluation = dict(interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'],
                   key_indicator='RGBPose_1:1_top1_acc')
 log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook')])
 work_dir = './work_dirs/late_only/lateral_late_cat_temp/hrnet/xview'
-# load_from = 'https://download.openmmlab.com/mmaction/pyskl/ckpt/rgbpose_conv3d/rgbpose_conv3d_init.pth'
-auto_resume = False

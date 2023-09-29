@@ -28,8 +28,8 @@ class RGBPoseHeadSum(BaseHead):
         self.init_std = init_std
         self.dropout_layer = None
         self.pooling_layer = nn.AdaptiveAvgPool3d(1)
-        self.pose_weight = None
-        self.rgb_weight = None
+        self.pose_weight = 1
+        self.rgb_weight = 1
         self.enc_layer = None
 
         self.loss_weights = [1.]
@@ -59,13 +59,14 @@ class RGBPoseHeadSum(BaseHead):
         x_rgb = x_rgb.view(x_rgb.size(0), -1)
         x_pose = x_pose.view(x_pose.size(0), -1)
 
-        if self.weight is not None:
-            x = self.pose_weight * x_pose + self.rgb_weight * x_rgb
+        if self.enc_layer is not None:
+            x_pose = self.enc_layer(x_pose)
+            x_rgb = self.enc_layer(x_rgb)
         else:
-            if self.enc_layer is not None:
-                x_pose = self.enc_layer(x_pose)
-                x_rgb = self.enc_layer(x_rgb)
-            x = x_pose + x_rgb
+            x_pose = self.pose_weight * x_pose
+            x_rgb = self.rgb_weight * x_rgb
+
+        x = x_pose + x_rgb
 
         assert x.shape[1] == self.fc_layer.in_features
 
